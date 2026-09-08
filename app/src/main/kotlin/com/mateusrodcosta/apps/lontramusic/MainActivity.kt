@@ -110,12 +110,13 @@ class MainActivity : ComponentActivity(), IntentLauncher {
                 var permissionGranted by remember { mutableStateOf(false) }
                 val permissions =
                     rememberMultiplePermissionsState(
-                        listOfNotNull(READ_PERMISSION),
+                        listOfNotNull(READ_PERMISSION, NOTIFICATION_PERMISSION),
                         onPermissionsResult = { result ->
-                            permissionGranted = result.all { it.value }
+                            permissionGranted = result[READ_PERMISSION] == true
                         },
                     )
-                permissionGranted = permissions.permissions.all { it.status.isGranted }
+                permissionGranted =
+                    permissions.permissions.find { it.permission == READ_PERMISSION }?.status?.isGranted == true
 
                 val uiManager = viewModel.uiManager
                 val topLevelScreenStack by

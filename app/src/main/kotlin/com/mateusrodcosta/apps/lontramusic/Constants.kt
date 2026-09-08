@@ -9,6 +9,11 @@ val READ_PERMISSION =
         Manifest.permission.READ_MEDIA_AUDIO
     else Manifest.permission.READ_EXTERNAL_STORAGE
 
+val NOTIFICATION_PERMISSION =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+        Manifest.permission.POST_NOTIFICATIONS
+    else null
+
 const val PREFERENCES_FILE_NAME = "preferences"
 const val PLAYLISTS_FILE_NAME = "playlists"
 const val TRACK_INDEX_FILE_NAME = "trackIndex"

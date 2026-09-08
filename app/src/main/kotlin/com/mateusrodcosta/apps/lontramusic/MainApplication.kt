@@ -67,17 +67,17 @@ class MainApplication : Application(), SingletonImageLoader.Factory {
             ioScope.launch {
                 preferences =
                     MutableStateFlow(
-                        loadCbor<Preferences>(context, PREFERENCES_FILE_NAME, false)?.upgrade()
+                        loadCbor<Preferences>(context, Constants.PREFERENCES_FILE_NAME, false)?.upgrade()
                             ?: Preferences()
                     )
                 unfilteredTrackIndex =
                     MutableStateFlow(
-                        loadCbor<UnfilteredTrackIndex>(context, TRACK_INDEX_FILE_NAME, false)
+                        loadCbor<UnfilteredTrackIndex>(context, Constants.TRACK_INDEX_FILE_NAME, false)
                             ?.upgrade() ?: UnfilteredTrackIndex(null, emptyMap())
                     )
                 playerState =
                     MutableStateFlow(
-                        loadCbor<PlayerState>(context, PLAYER_STATE_FILE_NAME, isCache = false)
+                        loadCbor<PlayerState>(context, Constants.PLAYER_STATE_FILE_NAME, isCache = false)
                             ?: PlayerState()
                     )
 
@@ -101,17 +101,17 @@ class MainApplication : Application(), SingletonImageLoader.Factory {
                 playlistManager.initialize()
 
                 saveManagers +=
-                        SaveManager(context, ioScope, preferences, PREFERENCES_FILE_NAME, false)
+                        SaveManager(context, ioScope, preferences, Constants.PREFERENCES_FILE_NAME, false)
                 saveManagers +=
                         SaveManager(
                             context,
                             ioScope,
                             unfilteredTrackIndex,
-                            TRACK_INDEX_FILE_NAME,
+                            Constants.TRACK_INDEX_FILE_NAME,
                             false,
                         )
                 saveManagers +=
-                        SaveManager(context, ioScope, playerState, PLAYER_STATE_FILE_NAME, false)
+                        SaveManager(context, ioScope, playerState, Constants.PLAYER_STATE_FILE_NAME, false)
 
                 defaultScope.launch {
                     playerState.onEach { MainAppWidget().updateAll(context) }.collect()

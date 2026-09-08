@@ -10,16 +10,12 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import com.mateusrodcosta.apps.lontramusic.FILE_PATH_KEY
-import com.mateusrodcosta.apps.lontramusic.ROOT_MEDIA_ID
-import com.mateusrodcosta.apps.lontramusic.UNSHUFFLED_INDEX_KEY
-import com.mateusrodcosta.apps.lontramusic.URI_KEY
+import com.mateusrodcosta.apps.lontramusic.Constants
 import com.mateusrodcosta.apps.lontramusic.globals.Strings
 import com.mateusrodcosta.apps.lontramusic.ui.views.library.LibraryScreenTabType
 import com.mateusrodcosta.apps.lontramusic.utils.Random
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicLong
-import kotlin.collections.get
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.serialization.Serializable
@@ -161,8 +157,8 @@ fun Track.getMediaItem(unshuffledIndex: Int?): MediaItem {
                     .setDiscNumber(discNumber)
                     .setExtras(
                         Bundle().apply {
-                            putString(URI_KEY, uri.toString())
-                            putString(FILE_PATH_KEY, path)
+                            putString(Constants.URI_KEY, uri.toString())
+                            putString(Constants.FILE_PATH_KEY, path)
                         }
                     )
                     .build()
@@ -189,7 +185,7 @@ fun getChildMediaItems(
     val type = tabLookup[segments[0]]
     val path = segments.getOrNull(1)
     when {
-        parentId == ROOT_MEDIA_ID ->
+        parentId == Constants.ROOT_MEDIA_ID ->
             return preferences.tabs.map {
                 MediaItem.Builder()
                     .setMediaId(it.type.mediaId)
@@ -434,7 +430,7 @@ fun getChildMediaItems(
 }
 
 fun MediaItem.getUnshuffledIndex(): Int? {
-    return mediaMetadata.extras?.getInt(UNSHUFFLED_INDEX_KEY, -1)?.takeIf { it >= 0 }
+    return mediaMetadata.extras?.getInt(Constants.UNSHUFFLED_INDEX_KEY, -1)?.takeIf { it >= 0 }
 }
 
 fun MediaItem.setUnshuffledIndex(unshuffledIndex: Int?): MediaItem {
@@ -444,7 +440,7 @@ fun MediaItem.setUnshuffledIndex(unshuffledIndex: Int?): MediaItem {
                 .buildUpon()
                 .setExtras(
                     (mediaMetadata.extras?.clone() as Bundle? ?: Bundle()).apply {
-                        putInt(UNSHUFFLED_INDEX_KEY, unshuffledIndex ?: -1)
+                        putInt(Constants.UNSHUFFLED_INDEX_KEY, unshuffledIndex ?: -1)
                     }
                 )
                 .build()

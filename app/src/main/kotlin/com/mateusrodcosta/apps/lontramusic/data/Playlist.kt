@@ -20,11 +20,9 @@ import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import com.ibm.icu.text.DateFormat
+import com.mateusrodcosta.apps.lontramusic.Constants
 import com.mateusrodcosta.apps.lontramusic.MainActivity
-import com.mateusrodcosta.apps.lontramusic.PLAYLISTS_FILE_NAME
 import com.mateusrodcosta.apps.lontramusic.R
-import com.mateusrodcosta.apps.lontramusic.SHORTCUT_PLAYLIST
-import com.mateusrodcosta.apps.lontramusic.SHORTCUT_PLAYLIST_EXTRA_KEY
 import com.mateusrodcosta.apps.lontramusic.globals.Strings
 import com.mateusrodcosta.apps.lontramusic.ui.views.library.LibraryScreenTabType
 import com.mateusrodcosta.apps.lontramusic.utils.CaseInsensitiveMap
@@ -103,7 +101,7 @@ class PlaylistManager(
     fun initialize() {
         _playlists =
             MutableStateFlow(
-                loadCbor<Map<String, Playlist>>(context, PLAYLISTS_FILE_NAME, false)?.mapKeys {
+                loadCbor<Map<String, Playlist>>(context, Constants.PLAYLISTS_FILE_NAME, false)?.mapKeys {
                     UUID.fromString(it.key)
                 } ?: mapOf(SpecialPlaylist.FAVORITES.key to Playlist(""))
             )
@@ -123,7 +121,7 @@ class PlaylistManager(
                 _playlists.map(coroutineScope) { playlists ->
                     playlists.mapKeys { it.key.toString() }
                 },
-                PLAYLISTS_FILE_NAME,
+                Constants.PLAYLISTS_FILE_NAME,
                 false,
             )
         syncJob =
@@ -155,10 +153,10 @@ class PlaylistManager(
                         val invalidShortcuts =
                             ShortcutManagerCompat.getDynamicShortcuts(context)
                                 .filter { shortcut ->
-                                    shortcut.intent.action == SHORTCUT_PLAYLIST &&
+                                    shortcut.intent.action == Constants.SHORTCUT_PLAYLIST &&
                                         !uuids.contains(
                                             shortcut.intent.extras
-                                                ?.getString(SHORTCUT_PLAYLIST_EXTRA_KEY)
+                                                ?.getString(Constants.SHORTCUT_PLAYLIST_EXTRA_KEY)
                                                 ?.let {
                                                     try {
                                                         UUID.fromString(it)
@@ -634,8 +632,8 @@ fun playlistShortcut(
         .setIcon(IconCompat.createWithResource(context, R.drawable.shortcut_playlist))
         .setRank(rank)
         .setIntent(
-            Intent(SHORTCUT_PLAYLIST, null, context, MainActivity::class.java).apply {
-                putExtras(Bundle().apply { putString(SHORTCUT_PLAYLIST_EXTRA_KEY, key.toString()) })
+            Intent(Constants.SHORTCUT_PLAYLIST, null, context, MainActivity::class.java).apply {
+                putExtras(Bundle().apply { putString(Constants.SHORTCUT_PLAYLIST_EXTRA_KEY, key.toString()) })
             }
         )
         .build()

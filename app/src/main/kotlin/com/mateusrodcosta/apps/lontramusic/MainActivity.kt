@@ -110,13 +110,13 @@ class MainActivity : ComponentActivity(), IntentLauncher {
                 var permissionGranted by remember { mutableStateOf(false) }
                 val permissions =
                     rememberMultiplePermissionsState(
-                        listOfNotNull(READ_PERMISSION, NOTIFICATION_PERMISSION),
+                        listOfNotNull(Constants.READ_PERMISSION, Constants.NOTIFICATION_PERMISSION),
                         onPermissionsResult = { result ->
-                            permissionGranted = result[READ_PERMISSION] == true
+                            permissionGranted = result[Constants.READ_PERMISSION] == true
                         },
                     )
                 permissionGranted =
-                    permissions.permissions.find { it.permission == READ_PERMISSION }?.status?.isGranted == true
+                    permissions.permissions.find { it.permission == Constants.READ_PERMISSION }?.status?.isGranted == true
 
                 val uiManager = viewModel.uiManager
                 val topLevelScreenStack by
@@ -336,8 +336,8 @@ class MainActivity : ComponentActivity(), IntentLauncher {
         intent: Intent,
     ) {
         when (intent.action) {
-            SHORTCUT_CONTINUE -> playerManager.play()
-            SHORTCUT_SHUFFLE -> {
+            Constants.SHORTCUT_CONTINUE -> playerManager.play()
+            Constants.SHORTCUT_SHUFFLE -> {
                 scanJob.join()
 
                 val tracksTab = preferences.tabSettings[LibraryScreenTabType.TRACKS]!!
@@ -355,12 +355,12 @@ class MainActivity : ComponentActivity(), IntentLauncher {
                     null,
                 )
             }
-            SHORTCUT_PLAYLIST -> {
+            Constants.SHORTCUT_PLAYLIST -> {
                 scanJob.join()
 
                 val playlist =
                     playlists()[
-                        intent.extras?.getString(SHORTCUT_PLAYLIST_EXTRA_KEY)?.let {
+                        intent.extras?.getString(Constants.SHORTCUT_PLAYLIST_EXTRA_KEY)?.let {
                             try {
                                 UUID.fromString(it)
                             } catch (_: Exception) {

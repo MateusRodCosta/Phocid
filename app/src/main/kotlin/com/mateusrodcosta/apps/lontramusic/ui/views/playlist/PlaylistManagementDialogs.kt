@@ -20,10 +20,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mateusrodcosta.apps.lontramusic.Constants
 import com.mateusrodcosta.apps.lontramusic.Dialog
 import com.mateusrodcosta.apps.lontramusic.MainViewModel
 import com.mateusrodcosta.apps.lontramusic.R
-import com.mateusrodcosta.apps.lontramusic.UNKNOWN
 import com.mateusrodcosta.apps.lontramusic.data.Playlist
 import com.mateusrodcosta.apps.lontramusic.data.RealizedPlaylist
 import com.mateusrodcosta.apps.lontramusic.data.Track
@@ -114,7 +114,7 @@ class DeletePlaylistDialog(private val keys: Set<UUID>) : Dialog() {
     @Composable
     override fun Compose(viewModel: MainViewModel) {
         val singlePlaylistName = rememberSaveable {
-            viewModel.playlistManager.playlists.value[keys.first()]?.displayName ?: UNKNOWN
+            viewModel.playlistManager.playlists.value[keys.first()]?.displayName ?: Constants.UNKNOWN
         }
         DialogBase(
             title =
@@ -216,7 +216,7 @@ class RemoveFromPlaylistDialog(private val playlistKey: UUID, private val trackK
     @Composable
     override fun Compose(viewModel: MainViewModel) {
         val playlistName = rememberSaveable {
-            viewModel.playlistManager.playlists.value[playlistKey]?.displayName ?: UNKNOWN
+            viewModel.playlistManager.playlists.value[playlistKey]?.displayName ?: Constants.UNKNOWN
         }
         DialogBase(
             title = Strings[R.string.playlist_remove_from_dialog_title].icuFormat(trackKeys.size),

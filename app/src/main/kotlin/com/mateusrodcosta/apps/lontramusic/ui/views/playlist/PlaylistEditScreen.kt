@@ -43,11 +43,11 @@ import androidx.compose.ui.unit.dp
 import androidx.core.view.HapticFeedbackConstantsCompat
 import androidx.core.view.ViewCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mateusrodcosta.apps.lontramusic.Constants
 import com.mateusrodcosta.apps.lontramusic.Dialog
 import com.mateusrodcosta.apps.lontramusic.MainViewModel
 import com.mateusrodcosta.apps.lontramusic.R
 import com.mateusrodcosta.apps.lontramusic.TopLevelScreen
-import com.mateusrodcosta.apps.lontramusic.UNKNOWN
 import com.mateusrodcosta.apps.lontramusic.data.InvalidTrack
 import com.mateusrodcosta.apps.lontramusic.data.RealizedPlaylistEntry
 import com.mateusrodcosta.apps.lontramusic.data.Track
@@ -192,7 +192,7 @@ class PlaylistEditScreen(private val playlistKey: UUID) : TopLevelScreen() {
                             ) { isDragging ->
                                 Box {
                                     LibraryListItemHorizontal(
-                                        title = entry.track?.displayTitle ?: UNKNOWN,
+                                        title = entry.track?.displayTitle ?: Constants.UNKNOWN,
                                         subtitle =
                                             entry.track?.displayArtistWithAlbum
                                                 ?: FilenameUtils.getName(entry.playlistEntry.path),

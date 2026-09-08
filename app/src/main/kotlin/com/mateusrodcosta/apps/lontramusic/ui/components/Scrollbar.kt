@@ -47,7 +47,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
-import com.mateusrodcosta.apps.lontramusic.TNUM
+import com.mateusrodcosta.apps.lontramusic.Constants
 import com.mateusrodcosta.apps.lontramusic.ui.theme.EXIT_DURATION
 import com.mateusrodcosta.apps.lontramusic.ui.theme.Typography
 import com.mateusrodcosta.apps.lontramusic.ui.theme.contentColor
@@ -124,7 +124,7 @@ fun DrawScope.drawHint(
     val style =
         Typography.headlineLarge.let {
             it.copy(
-                fontFeatureSettings = TNUM,
+                fontFeatureSettings = Constants.TNUM,
                 lineHeight =
                     TextUnit(it.fontSize.value + (padding * 2).toSp().value, TextUnitType.Sp),
                 lineHeightStyle =

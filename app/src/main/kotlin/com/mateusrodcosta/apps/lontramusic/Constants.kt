@@ -4,48 +4,50 @@ import android.Manifest
 import android.os.Build
 import androidx.compose.ui.unit.dp
 
-val READ_PERMISSION =
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-        Manifest.permission.READ_MEDIA_AUDIO
-    else Manifest.permission.READ_EXTERNAL_STORAGE
+class Constants {
+    companion object {
+        val READ_PERMISSION =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                Manifest.permission.READ_MEDIA_AUDIO
+            else Manifest.permission.READ_EXTERNAL_STORAGE
 
-val NOTIFICATION_PERMISSION =
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-        Manifest.permission.POST_NOTIFICATIONS
-    else null
+        val NOTIFICATION_PERMISSION =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                Manifest.permission.POST_NOTIFICATIONS
+            else null
 
-const val PREFERENCES_FILE_NAME = "preferences"
-const val PLAYLISTS_FILE_NAME = "playlists"
-const val TRACK_INDEX_FILE_NAME = "trackIndex"
-const val PLAYER_STATE_FILE_NAME = "playerState"
-const val UI_STATE_FILE_NAME = "uiState"
+        const val PREFERENCES_FILE_NAME = "preferences"
+        const val PLAYLISTS_FILE_NAME = "playlists"
+        const val TRACK_INDEX_FILE_NAME = "trackIndex"
+        const val PLAYER_STATE_FILE_NAME = "playerState"
+        const val UI_STATE_FILE_NAME = "uiState"
 
-const val UNSHUFFLED_INDEX_KEY = "originalIndex"
-const val SET_TIMER_COMMAND = "setTimer"
-const val EXTERNAL_REPEAT_COMMAND = "repeat"
-const val EXTERNAL_SHUFFLE_COMMAND = "shuffle"
-const val EXTERNAL_FAVORITE_COMMAND = "favorite"
-const val TIMER_TARGET_KEY = "timerTarget"
-const val TIMER_FINISH_LAST_TRACK_KEY = "timerFinishLastTrack"
-const val FILE_PATH_KEY = "filePath"
-/**
- * Used instead of [androidx.media3.common.MediaMetadata.artworkUri]; Setting the latter would break
- * Android Auto
- */
-const val URI_KEY = "bitmapUri"
-const val AUDIO_SESSION_ID_KEY = "audioSessionId"
+        const val UNSHUFFLED_INDEX_KEY = "originalIndex"
+        const val SET_TIMER_COMMAND = "setTimer"
+        const val EXTERNAL_REPEAT_COMMAND = "repeat"
+        const val EXTERNAL_SHUFFLE_COMMAND = "shuffle"
+        const val EXTERNAL_FAVORITE_COMMAND = "favorite"
+        const val TIMER_TARGET_KEY = "timerTarget"
+        const val TIMER_FINISH_LAST_TRACK_KEY = "timerFinishLastTrack"
+        const val FILE_PATH_KEY = "filePath"
 
-const val ROOT_MEDIA_ID = "root"
+        /**
+         * Used instead of [androidx.media3.common.MediaMetadata.artworkUri]; Setting the latter would break
+         * Android Auto
+         */
+        const val URI_KEY = "bitmapUri"
+        const val AUDIO_SESSION_ID_KEY = "audioSessionId"
 
-const val SHORTCUT_CONTINUE = "com.mateusrodcosta.apps.lontramusic.CONTINUE"
-const val SHORTCUT_SHUFFLE = "com.mateusrodcosta.apps.lontramusic.SHUFFLE"
-const val SHORTCUT_PLAYLIST = "com.mateusrodcosta.apps.lontramusic.PLAYLIST"
-const val SHORTCUT_PLAYLIST_EXTRA_KEY = "playlist"
+        const val ROOT_MEDIA_ID = "root"
 
-const val UNKNOWN = "<unknown>"
+        const val SHORTCUT_CONTINUE = "com.mateusrodcosta.apps.lontramusic.CONTINUE"
+        const val SHORTCUT_SHUFFLE = "com.mateusrodcosta.apps.lontramusic.SHUFFLE"
+        const val SHORTCUT_PLAYLIST = "com.mateusrodcosta.apps.lontramusic.PLAYLIST"
+        const val SHORTCUT_PLAYLIST_EXTRA_KEY = "playlist"
 
-val DEFAULT_SWIPE_THRESHOLD = 32.dp
-const val TNUM = "tnum"
+        const val UNKNOWN = "<unknown>"
 
-const val DEPENDENCY_INFOS_FILE_NAME = "open_source_licenses.json"
-const val LICENSE_MAPPINGS_FILE_NAME = "LicenseMappings.json"
+        val DEFAULT_SWIPE_THRESHOLD = 32.dp
+        const val TNUM = "tnum"
+    }
+}

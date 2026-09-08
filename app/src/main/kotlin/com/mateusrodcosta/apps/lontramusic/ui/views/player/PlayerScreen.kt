@@ -53,7 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.Player
-import com.mateusrodcosta.apps.lontramusic.DEFAULT_SWIPE_THRESHOLD
+import com.mateusrodcosta.apps.lontramusic.Constants
 import com.mateusrodcosta.apps.lontramusic.MainViewModel
 import com.mateusrodcosta.apps.lontramusic.R
 import com.mateusrodcosta.apps.lontramusic.UiManager
@@ -404,7 +404,7 @@ fun PlayerScreen(dragLock: DragLock, viewModel: MainViewModel = viewModel()) {
                             components.artwork.Compose(
                                 playerTransientStateVersion = playerTransientStateVersion,
                                 swipeThreshold =
-                                    DEFAULT_SWIPE_THRESHOLD * preferences.swipeThresholdMultiplier,
+                                    Constants.DEFAULT_SWIPE_THRESHOLD * preferences.swipeThresholdMultiplier,
                                 artworkColorPreference = preferences.artworkColorPreference,
                                 playerState = playerState,
                                 playerScreenDragState = playerScreenDragState,
@@ -495,7 +495,7 @@ fun PlayerScreen(dragLock: DragLock, viewModel: MainViewModel = viewModel()) {
                                     playQueueDragState.position == 1f || playQueueDragTarget == 1f,
                                 swipeToRemoveFromQueue = preferences.swipeToRemoveFromQueue,
                                 swipeThreshold =
-                                    DEFAULT_SWIPE_THRESHOLD * preferences.swipeThresholdMultiplier,
+                                    Constants.DEFAULT_SWIPE_THRESHOLD * preferences.swipeThresholdMultiplier,
                                 alwaysShowHintOnScroll = preferences.alwaysShowHintOnScroll,
                                 onTogglePlayQueue = {
                                     playQueueDragState.animateTo(

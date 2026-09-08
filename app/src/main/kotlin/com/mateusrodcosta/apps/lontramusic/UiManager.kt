@@ -119,7 +119,7 @@ class UiManager(
                 .collect()
         }
 
-    val playerScreenDragState = BinaryDragState({ DEFAULT_SWIPE_THRESHOLD })
+    val playerScreenDragState = BinaryDragState({ Constants.DEFAULT_SWIPE_THRESHOLD })
 
     private val playerScreenQueueCollapseCounter = AtomicLong(0)
     private val _playerScreenQueueCollapseEvent = MutableStateFlow(0L as Any)
@@ -127,7 +127,7 @@ class UiManager(
 
     val playerScreenQueueDragState =
         BinaryDragState(
-            { DEFAULT_SWIPE_THRESHOLD },
+            { Constants.DEFAULT_SWIPE_THRESHOLD },
             onSnapToZero = {
                 _playerScreenQueueCollapseEvent.update {
                     playerScreenQueueCollapseCounter.incrementAndGet()
@@ -200,13 +200,13 @@ class UiManager(
                 }
             }
                 .distinctUntilChanged(),
-            UI_STATE_FILE_NAME,
+            Constants.UI_STATE_FILE_NAME,
             false,
         )
 
     init {
         val persistentState =
-            loadCbor<PersistentUiState>(context, UI_STATE_FILE_NAME, false) ?: PersistentUiState()
+            loadCbor<PersistentUiState>(context, Constants.UI_STATE_FILE_NAME, false) ?: PersistentUiState()
         coroutineScope.launch {
             libraryScreenHomeViewState.pagerState.scrollToPage(
                 persistentState.libraryScreenHomeViewPage

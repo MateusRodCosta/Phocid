@@ -99,10 +99,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.Player
-import com.mateusrodcosta.apps.lontramusic.DEFAULT_SWIPE_THRESHOLD
+import com.mateusrodcosta.apps.lontramusic.Constants
 import com.mateusrodcosta.apps.lontramusic.MainViewModel
 import com.mateusrodcosta.apps.lontramusic.R
-import com.mateusrodcosta.apps.lontramusic.TNUM
 import com.mateusrodcosta.apps.lontramusic.data.ArtworkColorPreference
 import com.mateusrodcosta.apps.lontramusic.data.InvalidTrack
 import com.mateusrodcosta.apps.lontramusic.data.LibraryIndex
@@ -358,7 +357,7 @@ fun LibraryScreen(
             BottomBar(
                 playerManager,
                 libraryIndex,
-                DEFAULT_SWIPE_THRESHOLD * preferences.swipeThresholdMultiplier,
+                Constants.DEFAULT_SWIPE_THRESHOLD * preferences.swipeThresholdMultiplier,
                 preferences.artworkColorPreference,
                 preferences.shapePreference.artworkShape,
                 uiManager.playerScreenDragState,
@@ -700,7 +699,7 @@ private fun CollectionSearchBar(
                 }
                 SingleLineText(
                     text = positionIndicator,
-                    style = Typography.labelSmall.copy(fontFeatureSettings = TNUM),
+                    style = Typography.labelSmall.copy(fontFeatureSettings = Constants.TNUM),
                     color = contentColorVariant(),
                     modifier = Modifier.padding(start = 16.dp, end = 4.dp),
                 )

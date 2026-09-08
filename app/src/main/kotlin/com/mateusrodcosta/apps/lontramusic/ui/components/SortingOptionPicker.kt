@@ -11,8 +11,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.mateusrodcosta.apps.lontramusic.Constants
 import com.mateusrodcosta.apps.lontramusic.R
-import com.mateusrodcosta.apps.lontramusic.UNKNOWN
 import com.mateusrodcosta.apps.lontramusic.data.SortingOption
 import com.mateusrodcosta.apps.lontramusic.globals.Strings
 
@@ -29,7 +29,7 @@ inline fun SortingOptionPicker(
         SelectBox(
             items =
                 sortingOptions.values.map { value ->
-                    value.stringId?.let { Strings[it] } ?: UNKNOWN
+                    value.stringId?.let { Strings[it] } ?: Constants.UNKNOWN
                 },
             activeIndex = sortingOptions.keys.indexOf(activeSortingOptionId),
             onSetActiveIndex = {

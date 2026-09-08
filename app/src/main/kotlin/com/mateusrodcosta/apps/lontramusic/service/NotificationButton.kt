@@ -6,9 +6,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.CommandButton
 import androidx.media3.session.SessionCommand
-import com.mateusrodcosta.apps.lontramusic.EXTERNAL_FAVORITE_COMMAND
-import com.mateusrodcosta.apps.lontramusic.EXTERNAL_REPEAT_COMMAND
-import com.mateusrodcosta.apps.lontramusic.EXTERNAL_SHUFFLE_COMMAND
+import com.mateusrodcosta.apps.lontramusic.Constants
 import com.mateusrodcosta.apps.lontramusic.R
 import com.mateusrodcosta.apps.lontramusic.globals.Strings
 
@@ -34,7 +32,7 @@ enum class NotificationButton(
                         else -> Strings[R.string.player_repeat_mode_off]
                     }
                 )
-                .setSessionCommand(SessionCommand(EXTERNAL_REPEAT_COMMAND, Bundle.EMPTY))
+                .setSessionCommand(SessionCommand(Constants.EXTERNAL_REPEAT_COMMAND, Bundle.EMPTY))
                 .setSlots(CommandButton.SLOT_OVERFLOW)
                 .build()
         },
@@ -50,7 +48,7 @@ enum class NotificationButton(
                     if (player.shuffleModeEnabled) Strings[R.string.player_shuffle_on]
                     else Strings[R.string.player_shuffle_off]
                 )
-                .setSessionCommand(SessionCommand(EXTERNAL_SHUFFLE_COMMAND, Bundle.EMPTY))
+                .setSessionCommand(SessionCommand(Constants.EXTERNAL_SHUFFLE_COMMAND, Bundle.EMPTY))
                 .setSlots(CommandButton.SLOT_OVERFLOW)
                 .build()
         },
@@ -67,7 +65,7 @@ enum class NotificationButton(
                         Strings[R.string.player_now_playing_remove_favorites]
                     else Strings[R.string.player_now_playing_add_favorites]
                 )
-                .setSessionCommand(SessionCommand(EXTERNAL_FAVORITE_COMMAND, Bundle.EMPTY))
+                .setSessionCommand(SessionCommand(Constants.EXTERNAL_FAVORITE_COMMAND, Bundle.EMPTY))
                 .setSlots(CommandButton.SLOT_OVERFLOW)
                 .build()
         },

@@ -13,11 +13,8 @@ import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionToken
-import com.mateusrodcosta.apps.lontramusic.AUDIO_SESSION_ID_KEY
+import com.mateusrodcosta.apps.lontramusic.Constants
 import com.mateusrodcosta.apps.lontramusic.PlaybackService
-import com.mateusrodcosta.apps.lontramusic.SET_TIMER_COMMAND
-import com.mateusrodcosta.apps.lontramusic.TIMER_FINISH_LAST_TRACK_KEY
-import com.mateusrodcosta.apps.lontramusic.TIMER_TARGET_KEY
 import com.mateusrodcosta.apps.lontramusic.utils.coerceInOrMin
 import com.mateusrodcosta.apps.lontramusic.utils.wrap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -238,33 +235,33 @@ class PlayerManager(
 
     fun getTimerState(): Pair<Long, Boolean>? {
         return mediaController.sessionExtras
-            .getLong(TIMER_TARGET_KEY, -1)
+            .getLong(Constants.TIMER_TARGET_KEY, -1)
             .takeIf { it >= 0 }
             ?.let {
                 Pair(
                     it,
-                    mediaController.sessionExtras.getBoolean(TIMER_FINISH_LAST_TRACK_KEY, true),
+                    mediaController.sessionExtras.getBoolean(Constants.TIMER_FINISH_LAST_TRACK_KEY, true),
                 )
             }
     }
 
     fun setTimer(settings: PlayerTimerSettings) {
         mediaController.sendCustomCommand(
-            SessionCommand(SET_TIMER_COMMAND, Bundle.EMPTY),
+            SessionCommand(Constants.SET_TIMER_COMMAND, Bundle.EMPTY),
             Bundle().apply {
                 putLong(
-                    TIMER_TARGET_KEY,
+                    Constants.TIMER_TARGET_KEY,
                     SystemClock.elapsedRealtime() + settings.duration.inWholeMilliseconds,
                 )
-                putBoolean(TIMER_FINISH_LAST_TRACK_KEY, settings.finishLastTrack)
+                putBoolean(Constants.TIMER_FINISH_LAST_TRACK_KEY, settings.finishLastTrack)
             },
         )
     }
 
     fun cancelTimer() {
         mediaController.sendCustomCommand(
-            SessionCommand(SET_TIMER_COMMAND, Bundle.EMPTY),
-            Bundle().apply { putLong(TIMER_TARGET_KEY, -1) },
+            SessionCommand(Constants.SET_TIMER_COMMAND, Bundle.EMPTY),
+            Bundle().apply { putLong(Constants.TIMER_TARGET_KEY, -1) },
         )
     }
 
@@ -273,7 +270,7 @@ class PlayerManager(
     }
 
     fun openSystemEqualizer(context: Context): Boolean {
-        val sessionId = mediaController.sessionExtras.getInt(AUDIO_SESSION_ID_KEY)
+        val sessionId = mediaController.sessionExtras.getInt(Constants.AUDIO_SESSION_ID_KEY)
         return try {
             context.startActivity(
                 Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL).apply {

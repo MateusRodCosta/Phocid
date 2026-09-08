@@ -16,8 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.mateusrodcosta.apps.lontramusic.Constants
 import com.mateusrodcosta.apps.lontramusic.R
-import com.mateusrodcosta.apps.lontramusic.TNUM
 import com.mateusrodcosta.apps.lontramusic.globals.Strings
 import com.mateusrodcosta.apps.lontramusic.ui.theme.Typography
 
@@ -38,7 +38,7 @@ fun SteppedSliderWithNumber(
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             SingleLineText(
                 number,
-                style = Typography.headlineLarge.copy(fontFeatureSettings = TNUM),
+                style = Typography.headlineLarge.copy(fontFeatureSettings = Constants.TNUM),
                 color = numberColor,
                 modifier = Modifier.weight(1f),
             )

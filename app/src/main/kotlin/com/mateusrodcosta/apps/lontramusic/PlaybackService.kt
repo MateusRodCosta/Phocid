@@ -57,7 +57,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlin.collections.get
 
 @OptIn(UnstableApi::class)
 class PlaybackService : MediaLibraryService() {
@@ -131,7 +130,7 @@ class PlaybackService : MediaLibraryService() {
                     )
                 )
                 .setBitmapLoader(CustomizedBitmapLoader(this))
-                .setSessionExtras(Bundle().apply { putInt(AUDIO_SESSION_ID_KEY, player.inner.audioSessionId) })
+                .setSessionExtras(Bundle().apply { putInt(Constants.AUDIO_SESSION_ID_KEY, player.inner.audioSessionId) })
                 .setMediaButtonPreferences(commandButtons(player))
                 .build()
 
@@ -189,7 +188,7 @@ class PlaybackService : MediaLibraryService() {
                             ) {
                                 player.pause()
                                 timerTarget = -1
-                                mediaSession?.updateSessionExtras { putLong(TIMER_TARGET_KEY, -1) }
+                                mediaSession?.updateSessionExtras { putLong(Constants.TIMER_TARGET_KEY, -1) }
                                 timerJob?.cancel()
                                 timerJob = null
                             }
@@ -243,7 +242,7 @@ class PlaybackService : MediaLibraryService() {
                 return Futures.immediateFuture(
                     LibraryResult.ofItem(
                         MediaItem.Builder()
-                            .setMediaId(ROOT_MEDIA_ID)
+                            .setMediaId(Constants.ROOT_MEDIA_ID)
                             .setMediaMetadata(
                                 MediaMetadata.Builder()
                                     .setMediaType(MediaMetadata.MEDIA_TYPE_FOLDER_MIXED)
@@ -429,10 +428,10 @@ class PlaybackService : MediaLibraryService() {
 
     private val playerCommands =
         mapOf(
-            SET_TIMER_COMMAND to ::onSetTimer,
-            EXTERNAL_REPEAT_COMMAND to ::onExternalRepeat,
-            EXTERNAL_SHUFFLE_COMMAND to ::onExternalShuffle,
-            EXTERNAL_FAVORITE_COMMAND to ::onExternalFavorite,
+            Constants.SET_TIMER_COMMAND to ::onSetTimer,
+            Constants.EXTERNAL_REPEAT_COMMAND to ::onExternalRepeat,
+            Constants.EXTERNAL_SHUFFLE_COMMAND to ::onExternalShuffle,
+            Constants.EXTERNAL_FAVORITE_COMMAND to ::onExternalFavorite,
         )
 
     private fun commandButtons(player: Player): List<CommandButton> {
@@ -457,7 +456,7 @@ class PlaybackService : MediaLibraryService() {
                     ) {
                         player.pause()
                         timerTarget = -1
-                        mediaSession?.updateSessionExtras { putLong(TIMER_TARGET_KEY, -1) }
+                        mediaSession?.updateSessionExtras { putLong(Constants.TIMER_TARGET_KEY, -1) }
                         timerJob?.cancel()
                         timerJob = null
                     } else if (timerTarget < 0) {
@@ -474,13 +473,13 @@ class PlaybackService : MediaLibraryService() {
     private fun onSetTimer(player: CustomizedPlayer, session: MediaSession, args: Bundle) {
         runBlocking {
             timerMutex.withLock {
-                val target = args.getLong(TIMER_TARGET_KEY, -1)
-                val finishLastTrack = args.getBoolean(TIMER_FINISH_LAST_TRACK_KEY, true)
+                val target = args.getLong(Constants.TIMER_TARGET_KEY, -1)
+                val finishLastTrack = args.getBoolean(Constants.TIMER_FINISH_LAST_TRACK_KEY, true)
                 timerTarget = target
                 timerFinishLastTrack = finishLastTrack
                 session.updateSessionExtras {
-                    putLong(TIMER_TARGET_KEY, target)
-                    putBoolean(TIMER_FINISH_LAST_TRACK_KEY, finishLastTrack)
+                    putLong(Constants.TIMER_TARGET_KEY, target)
+                    putBoolean(Constants.TIMER_FINISH_LAST_TRACK_KEY, finishLastTrack)
                 }
                 timerJob?.cancel()
                 timerJob = newTimerJob(player)

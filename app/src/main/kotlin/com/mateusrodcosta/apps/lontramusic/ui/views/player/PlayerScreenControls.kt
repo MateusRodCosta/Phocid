@@ -44,8 +44,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
+import com.mateusrodcosta.apps.lontramusic.Constants
 import com.mateusrodcosta.apps.lontramusic.R
-import com.mateusrodcosta.apps.lontramusic.TNUM
 import com.mateusrodcosta.apps.lontramusic.data.Track
 import com.mateusrodcosta.apps.lontramusic.globals.Strings
 import com.mateusrodcosta.apps.lontramusic.globals.format
@@ -304,7 +304,7 @@ class PlayerScreenControlsDefaultBase(
                         ) {
                             SingleLineText(
                                 progressSeconds.seconds.format(),
-                                style = Typography.labelMedium.copy(fontFeatureSettings = TNUM),
+                                style = Typography.labelMedium.copy(fontFeatureSettings = Constants.TNUM),
                                 textAlign = TextAlign.Center,
                                 modifier =
                                     Modifier.defaultMinSize(
@@ -330,7 +330,7 @@ class PlayerScreenControlsDefaultBase(
                                         if (useCountdown) -(it - progressSeconds.seconds) else it
                                     }
                                     .format(),
-                                style = Typography.labelMedium.copy(fontFeatureSettings = TNUM),
+                                style = Typography.labelMedium.copy(fontFeatureSettings = Constants.TNUM),
                                 textAlign = TextAlign.Center,
                                 modifier =
                                     Modifier.defaultMinSize(

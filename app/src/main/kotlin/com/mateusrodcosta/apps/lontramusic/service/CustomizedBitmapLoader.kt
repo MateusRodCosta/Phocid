@@ -14,8 +14,7 @@ import coil3.request.allowHardware
 import coil3.toBitmap
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
-import com.mateusrodcosta.apps.lontramusic.FILE_PATH_KEY
-import com.mateusrodcosta.apps.lontramusic.URI_KEY
+import com.mateusrodcosta.apps.lontramusic.Constants
 import com.mateusrodcosta.apps.lontramusic.data.ArtworkModel
 import com.mateusrodcosta.apps.lontramusic.data.ArtworkSourceType
 import com.mateusrodcosta.apps.lontramusic.data.ArtworkType
@@ -58,8 +57,8 @@ class CustomizedBitmapLoader(private val context: Context) : BitmapLoader {
     }
 
     override fun loadBitmapFromMetadata(metadata: MediaMetadata): ListenableFuture<Bitmap>? {
-        val uri = metadata.extras?.getString(URI_KEY)?.toUri() ?: return null
-        val path = metadata.extras?.getString(FILE_PATH_KEY)
+        val uri = metadata.extras?.getString(Constants.URI_KEY)?.toUri() ?: return null
+        val path = metadata.extras?.getString(Constants.FILE_PATH_KEY)
 
         return listeningExecutorService.submit<Bitmap> {
             runBlocking {

@@ -20,9 +20,8 @@ import androidx.palette.graphics.Palette
 import androidx.palette.graphics.Target
 import com.ibm.icu.text.Collator
 import com.ibm.icu.util.CaseInsensitiveString
+import com.mateusrodcosta.apps.lontramusic.Constants
 import com.mateusrodcosta.apps.lontramusic.R
-import com.mateusrodcosta.apps.lontramusic.READ_PERMISSION
-import com.mateusrodcosta.apps.lontramusic.UNKNOWN
 import com.mateusrodcosta.apps.lontramusic.globals.Strings
 import com.mateusrodcosta.apps.lontramusic.utils.CaseInsensitiveMap
 import com.mateusrodcosta.apps.lontramusic.utils.ColorSerializer
@@ -127,19 +126,19 @@ data class Track(
         get() = if (artists.any()) Strings.conjoin(artists) else null
 
     val displayArtist
-        get() = displayArtistOrNull ?: UNKNOWN
+        get() = displayArtistOrNull ?: Constants.UNKNOWN
 
     val displayAlbum
-        get() = album ?: UNKNOWN
+        get() = album ?: Constants.UNKNOWN
 
     val displayAlbumArtist
-        get() = if (albumArtists.any()) Strings.conjoin(albumArtists) else UNKNOWN
+        get() = if (albumArtists.any()) Strings.conjoin(albumArtists) else Constants.UNKNOWN
 
     val displayGenre
-        get() = if (genres.any()) Strings.conjoin(genres) else UNKNOWN
+        get() = if (genres.any()) Strings.conjoin(genres) else Constants.UNKNOWN
 
     val displayYear
-        get() = year?.toString() ?: UNKNOWN
+        get() = year?.toString() ?: Constants.UNKNOWN
 
     val displayNumber
         get() =
@@ -389,7 +388,7 @@ data class Album(
                     .flatMap { it.artists }
                     .modeOrNull()
                     ?.let { Strings[R.string.track_inferred_album_artist].icuFormat(it) }
-                ?: UNKNOWN
+                ?: Constants.UNKNOWN
 
     @Transient override val searchableStrings = listOf(name, displayAlbumArtist)
 
@@ -1330,7 +1329,7 @@ suspend fun scanTracks(
     onProgressReport: (Int, Int) -> Unit,
 ): UnfilteredTrackIndex? {
     if (
-        ContextCompat.checkSelfPermission(context, READ_PERMISSION) ==
+        ContextCompat.checkSelfPermission(context, Constants.READ_PERMISSION) ==
             PackageManager.PERMISSION_DENIED
     )
         return null
@@ -1394,7 +1393,7 @@ suspend fun scanTracks(
                         discNumber = cursor.getIntOrNull(ci[Media.DISC_NUMBER]!!),
                         duration = cursor.getInt(ci[Media.DURATION]!!).milliseconds,
                         size = size,
-                        format = UNKNOWN,
+                        format = Constants.UNKNOWN,
                         sampleRate = 0,
                         bitRate = cursor.getLongOrNull(ci[Media.BITRATE]!!) ?: 0,
                         bitDepth = 0,

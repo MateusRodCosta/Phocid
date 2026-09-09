@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.mateusrodcosta.apps.lontramusic.ui.theme.emphasizedExit
 import com.mateusrodcosta.apps.lontramusic.utils.wrap
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -162,6 +163,8 @@ inline fun <reified T> TrackCarousel(
         }
     }
 
+    var dragJob by remember { mutableStateOf<Job?>(null) }
+
     Box(
         modifier =
             modifier
@@ -176,11 +179,13 @@ inline fun <reified T> TrackCarousel(
                             isLastAdjacent = true
                         },
                         onDragCancel = {
+                            dragJob?.cancel()
                             coroutineScope.launch { offset.animateTo(0f) }
                             horizontalDragTotal = 0f
                             isLastAdjacent = true
                         },
                         onDragEnd = {
+                            dragJob?.cancel()
                             coroutineScope.launch(dispatcher) {
                                 val positionalThreshold =
                                     updatedSwipeThreshold.roundToPx().coerceAtMost(size.width / 2)
@@ -203,7 +208,8 @@ inline fun <reified T> TrackCarousel(
                     ) { change, dragAmount ->
                         horizontalDragTotal += dragAmount
                         isLastAdjacent = true
-                        coroutineScope.launch { offset.snapTo(horizontalDragTotal / size.width) }
+                        dragJob?.cancel()
+                        dragJob = coroutineScope.launch { offset.snapTo(horizontalDragTotal / size.width) }
                     }
                 }
     ) {

@@ -304,7 +304,7 @@ private fun loadExternal(path: String?, sizeLimit: Int?, crop: Boolean): Bitmap?
 private fun decodeBitmap(source: ImageDecoder.Source, sizeLimit: Int?, crop: Boolean): Bitmap? {
     return try {
         ImageDecoder.decodeBitmap(source) { decoder, info, source ->
-            decoder.setAllocator(ImageDecoder.ALLOCATOR_SOFTWARE)
+            decoder.setAllocator(ImageDecoder.ALLOCATOR_DEFAULT)
 
             val resizeFactor =
                 sizeLimit?.toFloat()?.div(max(info.size.width, info.size.height))?.takeIf {

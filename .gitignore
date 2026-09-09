@@ -4,14 +4,24 @@
 # https://issuetracker.google.com/issues/346566179
 .idea/other.xml
 
-# Generated third party license report
-/app/src/main/assets/open_source_licenses.*
-
 *.svg
 *.png
 *.webp
 !/app/src/main/res/**
 !/fastlane/**
+
+# Signing and secrets
+
+key.properties
+**/*.keystore
+**/*.jks
+/fastlane/report.xml
+/fastlane/secrets/*
+!/fastlane/secrets/.gitkeep
+
+# Release stuff
+
+app/release
 
 # Created by https://www.toptal.com/developers/gitignore/api/androidstudio,windows,linux,macos
 # Edit at https://www.toptal.com/developers/gitignore?templates=androidstudio,windows,linux,macos

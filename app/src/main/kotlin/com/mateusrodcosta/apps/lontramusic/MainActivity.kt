@@ -45,6 +45,7 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.ibm.icu.util.ULocale
 import com.mateusrodcosta.apps.lontramusic.data.ArtworkModel
+import com.mateusrodcosta.apps.lontramusic.data.ArtworkType
 import com.mateusrodcosta.apps.lontramusic.data.LibraryIndex
 import com.mateusrodcosta.apps.lontramusic.data.PlayerManager
 import com.mateusrodcosta.apps.lontramusic.data.Preferences
@@ -172,13 +173,19 @@ class MainActivity : ComponentActivity(), IntentLauncher {
                         if (queue.isNotEmpty()) {
                             val curr = state.currentIndex
                             val repeat = state.repeat != Player.REPEAT_MODE_OFF
-                            val prevIndex = (curr - 1).wrap(queue.size, repeat)
-                            val nextIndex = (curr + 1).wrap(queue.size, repeat)
+                            val indicesToPrefetch = listOfNotNull(
+                                (curr - 2).wrap(queue.size, repeat),
+                                (curr - 1).wrap(queue.size, repeat),
+                                curr,
+                                (curr + 1).wrap(queue.size, repeat),
+                                (curr + 2).wrap(queue.size, repeat),
+                                (curr + 3).wrap(queue.size, repeat),
+                            )
 
-                            listOfNotNull(prevIndex, nextIndex).distinct().forEach { idx ->
+                            indicesToPrefetch.distinct().forEach { idx ->
                                 val trackId = queue.getOrNull(idx) ?: return@forEach
                                 val track = library.tracks[trackId] ?: return@forEach
-                                if (track.hasArtwork) {
+                                if (track.artworkType != ArtworkType.NONE) {
                                     val model = ArtworkModel(
                                         type = track.artworkType,
                                         source = track.artworkSourcePath,

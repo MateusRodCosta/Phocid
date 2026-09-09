@@ -18,9 +18,13 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import com.mateusrodcosta.apps.lontramusic.data.ArtworkColorPreference
 import com.mateusrodcosta.apps.lontramusic.data.ArtworkModel
+import com.mateusrodcosta.apps.lontramusic.data.ArtworkType
 import com.mateusrodcosta.apps.lontramusic.data.getArtworkColor
 import com.mateusrodcosta.apps.lontramusic.ui.theme.LocalDarkTheme
 
@@ -69,7 +73,7 @@ fun ArtworkImage(
             if (darkTheme) lerp(color, Color.Black, 0.4f)
             else lerp(color, Color.White, 0.9f)
 
-        if (artwork is Artwork.Track && artwork.track.hasArtwork) {
+        if (artwork is Artwork.Track && artwork.track.artworkType != ArtworkType.NONE) {
             val artworkModel =
                 remember(
                     artwork.track.artworkHash,
@@ -86,10 +90,18 @@ fun ArtworkImage(
                     )
                 }
 
+            val context = LocalContext.current
+            val request = remember(artworkModel) {
+                ImageRequest.Builder(context)
+                    .data(artworkModel)
+                    .crossfade(true)
+                    .build()
+            }
+
             Box(modifier = Modifier.fillMaxSize().background(backgroundColor))
 
             AsyncImage(
-                model = artworkModel,
+                model = request,
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = contentScale,

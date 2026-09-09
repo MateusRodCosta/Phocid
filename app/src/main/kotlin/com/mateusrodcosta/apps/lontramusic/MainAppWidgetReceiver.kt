@@ -52,11 +52,15 @@ import androidx.glance.text.Text
 import androidx.glance.unit.ColorProvider
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
+import coil3.SingletonImageLoader
+import coil3.request.ImageRequest
+import coil3.request.allowHardware
+import coil3.toBitmap
 import com.google.common.util.concurrent.MoreExecutors
+import com.mateusrodcosta.apps.lontramusic.data.ArtworkModel
 import com.mateusrodcosta.apps.lontramusic.data.Track
 import com.mateusrodcosta.apps.lontramusic.data.WidgetLayout
 import com.mateusrodcosta.apps.lontramusic.data.getArtworkColor
-import com.mateusrodcosta.apps.lontramusic.data.loadArtwork
 import com.mateusrodcosta.apps.lontramusic.globals.GlobalData
 import com.mateusrodcosta.apps.lontramusic.globals.Strings
 import com.mateusrodcosta.apps.lontramusic.ui.theme.Typography
@@ -76,6 +80,7 @@ import java.util.Locale
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 
 class MainAppWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget = MainAppWidget()
@@ -99,14 +104,24 @@ class MainAppWidget : GlanceAppWidget() {
                         ]
                 track to
                     track?.let {
-                        loadArtwork(
-                            context,
-                            it.id,
-                            it.path,
-                            preferences.highResArtworkPreference.player,
-                            preferences.widgetArtworkResolutionLimit,
-                            preferences.widgetLayout.standaloneArtwork,
-                        )
+                        val model =
+                            ArtworkModel(
+                                type = it.artworkType,
+                                source = it.artworkSourcePath,
+                                hash = it.artworkHash,
+                                id = it.id,
+                                path = it.path,
+                            )
+                        val limit = preferences.widgetArtworkResolutionLimit
+                        val request =
+                            ImageRequest.Builder(context)
+                                .data(model)
+                                .size(limit, limit)
+                                .allowHardware(false)
+                                .build()
+                        runBlocking {
+                            SingletonImageLoader.get(context).execute(request).image?.toBitmap()
+                        }
                     }
             }
 

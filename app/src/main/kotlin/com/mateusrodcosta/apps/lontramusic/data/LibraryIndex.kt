@@ -18,6 +18,10 @@ import androidx.core.database.getLongOrNull
 import androidx.core.database.getStringOrNull
 import androidx.palette.graphics.Palette
 import androidx.palette.graphics.Target
+import coil3.SingletonImageLoader
+import coil3.request.ImageRequest
+import coil3.request.allowHardware
+import coil3.toBitmap
 import com.ibm.icu.text.Collator
 import com.ibm.icu.util.CaseInsensitiveString
 import com.mateusrodcosta.apps.lontramusic.Constants
@@ -48,6 +52,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
@@ -1697,7 +1702,25 @@ private fun scanTrack(
     } else if (cacheKey != null && scanCache.palette.containsKey(cacheKey)) {
         scanCache.palette[cacheKey]!!
     } else {
-        val palette = loadArtwork(context, id, path, false, 64)
+        val model = ArtworkModel(
+            type = when (resolvedArtwork.type) {
+                ArtworkSourceType.EMBEDDED -> ArtworkType.EMBEDDED
+                ArtworkSourceType.EXTERNAL -> ArtworkType.EXTERNAL
+                ArtworkSourceType.MEDIA_STORE -> ArtworkType.MEDIA_STORE
+            },
+            source = resolvedArtwork.source,
+            hash = artworkHash,
+            id = id,
+            path = path
+        )
+        val request = ImageRequest.Builder(context)
+            .data(model)
+            .size(64, 64)
+            .allowHardware(false)
+            .build()
+        val palette = runBlocking {
+            SingletonImageLoader.get(context).execute(request).image?.toBitmap()
+        }
             ?.let { Palette.from(it) }
             ?.clearTargets()
             ?.apply {

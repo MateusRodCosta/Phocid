@@ -1,0 +1,8 @@
+# Glance AppWidgets
+-keep public class * extends androidx.glance.appwidget.GlanceAppWidget {
+    public <init>();
+}
+
+-keep public class * extends androidx.glance.appwidget.GlanceAppWidgetReceiver {
+    public <init>();
+}

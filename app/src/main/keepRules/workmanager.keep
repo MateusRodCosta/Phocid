@@ -1,0 +1,12 @@
+# WorkManager InputMergers and Workers (instantiated dynamically via reflection)
+-keep public class * extends androidx.work.InputMerger {
+    public <init>();
+}
+
+-keep public class * extends androidx.work.ListenableWorker {
+    public <init>(android.content.Context, androidx.work.WorkerParameters);
+}
+
+-keep public class * extends androidx.work.Worker {
+    public <init>(android.content.Context, androidx.work.WorkerParameters);
+}

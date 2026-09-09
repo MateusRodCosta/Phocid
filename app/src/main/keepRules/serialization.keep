@@ -1,0 +1,14 @@
+# kotlinx.serialization Conditional Keep Rules
+# Preserve @Serializable model constructors and fields only for referenced serializable classes
+-if @kotlinx.serialization.Serializable class **
+-keep class <1> {
+    <init>(...);
+    @kotlinx.serialization.SerialName <fields>;
+}
+
+-if @kotlinx.serialization.Serializable class **
+-keepclassmembers class <1>$$serializer {
+    public static final <1>$$serializer INSTANCE;
+}
+
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod

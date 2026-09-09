@@ -1,0 +1,7 @@
+# Jetpack Media3 & MediaSession IPC Extra Bundles
+-keepclassmembers class androidx.media3.session.** {
+    public <init>(...);
+}
+-keepclassmembers class androidx.media3.common.** {
+    public <init>(...);
+}

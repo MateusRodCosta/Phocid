@@ -1,3 +1,4 @@
+import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -8,6 +9,12 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.aboutlibraries.android)
     id("com.ncorti.ktfmt.gradle") version "0.27.0"
+}
+
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(keystorePropertiesFile.inputStream())
 }
 
 android {
@@ -31,23 +38,47 @@ android {
 
     signingConfigs {
         getByName("debug") {
-            // Enable v3 signing only
+            // Enable v3 signing only, also on debug builds
             enableV1Signing = false
             enableV2Signing = false
             enableV3Signing = true
         }
+
+        if (keystorePropertiesFile.exists()) {
+            create("release") {
+                if (keystorePropertiesFile.exists()) {
+                    keyAlias = keystoreProperties["keyAlias"] as String
+                    keyPassword = keystoreProperties["keyPassword"] as String
+                    storeFile = file(keystoreProperties["storeFile"] as String)
+                    storePassword = keystoreProperties["storePassword"] as String
+                }
+
+                // Enable v3 signing only, which will be used on modern Android (9+)
+                enableV1Signing = false
+                enableV2Signing = false
+                enableV3Signing = true
+            }
+        }
     }
 
     buildTypes {
-        debug {
-            isPseudoLocalesEnabled = true
-        }
         release {
             optimization {
                 enable = true
             }
 
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (keystorePropertiesFile.exists()) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
+        }
+
+        debug {
+            isPseudoLocalesEnabled = true
+
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
         }
     }
 

@@ -89,34 +89,38 @@ fun resolveArtworkSource(
         }
         if (hasEmbedded) return ResolvedArtwork(ArtworkSourceType.EMBEDDED, path)
 
-        // 2. Check folder external artwork file (e.g. cover.jpg, folder.jpg)
-        val folder = path.substringBeforeLast('/', "")
-        val folderArtwork = if (scanCache != null) {
-            scanCache.folderArtwork.getOrPut(folder) {
-                OptionalArtwork(findExternalArtworkFile(path)?.absolutePath?.let {
-                    ResolvedArtwork(ArtworkSourceType.EXTERNAL, it)
-                })
-            }.artwork
-        } else {
-            findExternalArtworkFile(path)?.absolutePath?.let {
-                ResolvedArtwork(ArtworkSourceType.EXTERNAL, it)
-            }
+        // 2. Check external artwork file (e.g. trackName.jpg, cover.jpg, folder.jpg)
+        val externalFile = findExternalArtworkFile(path, scanCache)
+        if (externalFile != null) {
+            return ResolvedArtwork(ArtworkSourceType.EXTERNAL, externalFile.absolutePath)
         }
-        if (folderArtwork != null) return folderArtwork
     }
 
     // 3. Fallback to MediaStore
     return ResolvedArtwork(ArtworkSourceType.MEDIA_STORE, uri.toString())
 }
 
-private fun findExternalArtworkFile(path: String?): File? {
+private fun findExternalArtworkFile(path: String?, scanCache: ScanCache? = null): File? {
     if (path == null) return null
 
+    val trackName = FilenameUtils.getBaseName(path)
     val directoryName = FilenameUtils.getName(FilenameUtils.getPathNoEndSeparator(path))
-    val files = try {
-        File(FilenameUtils.getPath(path)).listFiles() ?: emptyArray()
-    } catch (_: Exception) {
-        emptyArray()
+    val folderPath = FilenameUtils.getPath(path)
+
+    val files = if (scanCache != null) {
+        scanCache.folderFiles.getOrPut(folderPath) {
+            try {
+                File(folderPath).listFiles() ?: emptyArray()
+            } catch (_: Exception) {
+                emptyArray()
+            }
+        }
+    } else {
+        try {
+            File(folderPath).listFiles() ?: emptyArray()
+        } catch (_: Exception) {
+            emptyArray()
+        }
     }
 
     return files
@@ -125,6 +129,7 @@ private fun findExternalArtworkFile(path: String?): File? {
             val extension = file.extension
             val extensionScore = imageFileExtensionScores[extension.lowercase()] ?: return@mapNotNull null
             val nameScore = when {
+                name.equals(trackName, true) -> 999
                 name.equals(directoryName, true) -> 998
                 else -> imageFileNameScores[name.lowercase()] ?: return@mapNotNull null
             }
@@ -141,6 +146,7 @@ fun loadArtwork(
     highRes: Boolean = false,
     sizeLimit: Int? = null,
     crop: Boolean = false,
+    allowHardware: Boolean = true,
 ): Bitmap? {
     val forcedSizeLimit =
         sizeLimit
@@ -156,12 +162,12 @@ fun loadArtwork(
             }
 
     return if (highRes) {
-        loadWithLibrary(path, forcedSizeLimit, crop)
-            ?: loadExternal(path, forcedSizeLimit, crop)
+        loadWithLibrary(path, forcedSizeLimit, crop, allowHardware)
+            ?: loadExternal(path, forcedSizeLimit, crop, allowHardware)
             ?: loadWithContentResolver(context, uri, forcedSizeLimit, crop)
     } else {
         loadWithContentResolver(context, uri, forcedSizeLimit, crop)
-            ?: loadExternal(path, forcedSizeLimit, crop)
+            ?: loadExternal(path, forcedSizeLimit, crop, allowHardware)
     }
 }
 
@@ -172,6 +178,7 @@ fun loadArtwork(
     highRes: Boolean = false,
     sizeLimit: Int? = null,
     crop: Boolean = false,
+    allowHardware: Boolean = true,
 ): Bitmap? {
     return loadArtwork(
         context,
@@ -180,6 +187,7 @@ fun loadArtwork(
         highRes,
         sizeLimit,
         crop,
+        allowHardware,
     )
 }
 
@@ -213,7 +221,12 @@ fun getEmbeddedArtworkHash(path: String?): Long? {
     }
 }
 
-private fun loadWithLibrary(path: String?, sizeLimit: Int?, crop: Boolean): Bitmap? {
+private fun loadWithLibrary(
+    path: String?,
+    sizeLimit: Int?,
+    crop: Boolean,
+    allowHardware: Boolean = true,
+): Bitmap? {
     return try {
         requireNotNull(path)
         val extension = FilenameUtils.getExtension(path).lowercase()
@@ -239,7 +252,7 @@ private fun loadWithLibrary(path: String?, sizeLimit: Int?, crop: Boolean): Bitm
             } else {
                 AudioFileIO.read(File(path)).tag.firstArtwork.binaryData
             }
-        decodeBitmap(data.let(ByteBuffer::wrap).let(ImageDecoder::createSource), sizeLimit, crop)
+        decodeBitmap(data.let(ByteBuffer::wrap).let(ImageDecoder::createSource), sizeLimit, crop, allowHardware)
     } catch (_: Exception) {
         null
     }
@@ -268,7 +281,12 @@ private fun loadWithContentResolver(
     }
 }
 
-private fun loadExternal(path: String?, sizeLimit: Int?, crop: Boolean): Bitmap? {
+private fun loadExternal(
+    path: String?,
+    sizeLimit: Int?,
+    crop: Boolean,
+    allowHardware: Boolean = true,
+): Bitmap? {
     if (path == null) return null
 
     val trackName = FilenameUtils.getBaseName(path)
@@ -297,14 +315,22 @@ private fun loadExternal(path: String?, sizeLimit: Int?, crop: Boolean): Bitmap?
         }
         .sortedByDescending { it.second }
         .firstNotNullOfOrNull { (file, _) ->
-            decodeBitmap(ImageDecoder.createSource(file), sizeLimit, crop)
+            decodeBitmap(ImageDecoder.createSource(file), sizeLimit, crop, allowHardware)
         }
 }
 
-private fun decodeBitmap(source: ImageDecoder.Source, sizeLimit: Int?, crop: Boolean): Bitmap? {
+private fun decodeBitmap(
+    source: ImageDecoder.Source,
+    sizeLimit: Int?,
+    crop: Boolean,
+    allowHardware: Boolean = true,
+): Bitmap? {
     return try {
         ImageDecoder.decodeBitmap(source) { decoder, info, source ->
-            decoder.setAllocator(ImageDecoder.ALLOCATOR_DEFAULT)
+            decoder.setAllocator(
+                if (allowHardware) ImageDecoder.ALLOCATOR_DEFAULT
+                else ImageDecoder.ALLOCATOR_SOFTWARE
+            )
 
             val resizeFactor =
                 sizeLimit?.toFloat()?.div(max(info.size.width, info.size.height))?.takeIf {

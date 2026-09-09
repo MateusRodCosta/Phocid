@@ -1,7 +1,6 @@
 package com.mateusrodcosta.apps.lontramusic.data
 
 import androidx.compose.runtime.Immutable
-import androidx.core.net.toUri
 import coil3.ImageLoader
 import coil3.asImage
 import coil3.decode.DataSource
@@ -10,6 +9,7 @@ import coil3.fetch.Fetcher
 import coil3.fetch.ImageFetchResult
 import coil3.key.Keyer
 import coil3.request.Options
+import coil3.request.allowHardware
 import coil3.size.pxOrElse
 import java.io.File
 import kotlinx.coroutines.Dispatchers
@@ -66,13 +66,7 @@ class TrackFetcher(
             }
         }
 
-        // 2. Direct Routing: If it's MediaStore, let Coil handle the Uri natively
-        if (data.type == ArtworkType.MEDIA_STORE && data.source != null) {
-            val uri = data.source.toUri()
-            return@withContext imageLoader.components.newFetcher(uri, options, imageLoader)?.first?.fetch()
-        }
-
-        // 3. Fallback/Embedded: Use our custom loader for Opus/Ogg or if direct routing failed
+        // 2. Fallback/Embedded/MediaStore: Use our custom loader for Opus/Ogg or MediaStore thumbnails
         val sizeLimit = options.size.width.pxOrElse { 0 }.coerceAtLeast(options.size.height.pxOrElse { 0 })
             .takeIf { it > 0 }
 
@@ -82,7 +76,8 @@ class TrackFetcher(
             path = data.path,
             highRes = true,
             sizeLimit = sizeLimit,
-            crop = true
+            crop = true,
+            allowHardware = options.allowHardware,
         ) ?: return@withContext null
 
         ImageFetchResult(

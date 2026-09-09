@@ -16,6 +16,7 @@ import com.mateusrodcosta.apps.lontramusic.ui.views.library.LibraryScreenTabInfo
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,6 +28,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.ExperimentalSerializationApi
 
 class MainViewModel(private val application: Application) : AndroidViewModel(application) {
@@ -110,14 +112,16 @@ class MainViewModel(private val application: Application) : AndroidViewModel(app
                                     .plus(Environment.getExternalStorageDirectory().path)
                                     .distinct()
                                     .toTypedArray()
-                            suspendCancellableCoroutine<Unit> { continuation ->
-                                MediaScannerConnection.scanFile(
-                                    application.applicationContext,
-                                    storages,
-                                    arrayOf("audio/*"),
-                                ) { _, _ ->
-                                    if (continuation.isActive) {
-                                        continuation.resume(Unit)
+                            withTimeoutOrNull(5.seconds) {
+                                suspendCancellableCoroutine<Unit> { continuation ->
+                                    MediaScannerConnection.scanFile(
+                                        application.applicationContext,
+                                        storages,
+                                        arrayOf("audio/*"),
+                                    ) { _, _ ->
+                                        if (continuation.isActive) {
+                                            continuation.resume(Unit)
+                                        }
                                     }
                                 }
                             }

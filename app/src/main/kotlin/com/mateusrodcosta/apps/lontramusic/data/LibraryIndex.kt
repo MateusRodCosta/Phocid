@@ -6,6 +6,7 @@ import android.app.ActivityManager
 import android.content.ContentUris
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.provider.MediaStore
 import android.provider.MediaStore.Audio.Media
 import android.util.Log
@@ -1467,7 +1468,7 @@ suspend fun scanTracks(
                 }
             }
         launch {
-            while (jobs.all { it.isActive }) {
+            while (jobs.any { it.isActive }) {
                 onProgressReport(progressCurrent.get(), progressTotal)
                 delay(100.milliseconds)
             }
@@ -1492,12 +1493,11 @@ private val yearRegexes =
         Regex("^.*?(?<year>[0-9]+).*?$"),
     )
 
-class OptionalArtwork(val artwork: ResolvedArtwork?)
 class OptionalHash(val hash: Long?)
 
 class ScanCache {
     val palette = ConcurrentHashMap<String, Pair<Color?, Color?>>()
-    val folderArtwork = ConcurrentHashMap<String, OptionalArtwork>()
+    val folderFiles = ConcurrentHashMap<String, Array<File>>()
     val artworkHash = ConcurrentHashMap<String, OptionalHash>()
 }
 
@@ -1718,7 +1718,11 @@ private suspend fun scanTrack(
             .size(64, 64)
             .allowHardware(false)
             .build()
-        val palette = SingletonImageLoader.get(context).execute(request).image?.toBitmap()
+        val bitmap = SingletonImageLoader.get(context).execute(request).image?.toBitmap()
+        val softwareBitmap = if (bitmap?.config == Bitmap.Config.HARDWARE) {
+            bitmap.copy(Bitmap.Config.ARGB_8888, false)
+        } else bitmap
+        val palette = softwareBitmap
             ?.let { Palette.from(it) }
             ?.clearTargets()
             ?.apply {

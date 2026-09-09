@@ -1,6 +1,8 @@
 package com.mateusrodcosta.apps.lontramusic
 
+import android.app.ActivityManager
 import android.app.Application
+import android.app.ApplicationExitInfo
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
@@ -8,6 +10,8 @@ import androidx.glance.appwidget.updateAll
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
+import coil3.disk.DiskCache
+import coil3.memory.MemoryCache
 import coil3.request.crossfade
 import com.mateusrodcosta.apps.lontramusic.data.LibraryIndex
 import com.mateusrodcosta.apps.lontramusic.data.PlayerState
@@ -34,6 +38,8 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
+import okio.Path.Companion.toOkioPath
+
 class MainApplication : Application(), SingletonImageLoader.Factory {
     private val mainScope = MainScope()
     private val defaultScope = CoroutineScope(mainScope.coroutineContext + Dispatchers.Default)
@@ -41,17 +47,54 @@ class MainApplication : Application(), SingletonImageLoader.Factory {
     private val saveManagers = mutableListOf<SaveManager<*>>()
 
     override fun newImageLoader(context: PlatformContext): ImageLoader {
+        val activityManager = getSystemService(ActivityManager::class.java)
+        val isLowRam = activityManager?.isLowRamDevice == true
+        val percent = if (isLowRam) 0.10 else 0.20
+
         return ImageLoader.Builder(context)
             .components {
                 add(TrackFetcher.Factory())
                 add(TrackKeyer())
             }
+            .memoryCache {
+                MemoryCache.Builder()
+                    .maxSizePercent(context, percent)
+                    .build()
+            }
+            .diskCache {
+                DiskCache.Builder()
+                    .directory(cacheDir.resolve("image_cache").toOkioPath())
+                    .maxSizeBytes(100L * 1024L * 1024L)
+                    .build()
+            }
             .crossfade(150)
             .build()
     }
 
+    @Suppress("DEPRECATION")
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        if (level >= TRIM_MEMORY_MODERATE) {
+            SingletonImageLoader.get(this).memoryCache?.clear()
+        } else if (level >= TRIM_MEMORY_UI_HIDDEN) {
+            SingletonImageLoader.get(this).memoryCache?.let { cache ->
+                cache.trimToSize(cache.size / 2)
+            }
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
+
+        val exitInfos = getSystemService(ActivityManager::class.java)
+            ?.getHistoricalProcessExitReasons(packageName, 0, 1)
+        exitInfos?.firstOrNull()?.let { info ->
+            if (info.reason == ApplicationExitInfo.REASON_OTHER &&
+                info.description?.contains("MemoryLimiter:AnonSwap") == true
+            ) {
+                Log.w("LontraMusic", "Previous exit triggered by Android 17 MemoryLimiter:AnonSwap: ${info.description}")
+            }
+        }
 
         Strings =
             object : StringSource {

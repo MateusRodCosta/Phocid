@@ -37,10 +37,14 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.currentStateAsState
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.Player
+import coil3.SingletonImageLoader
+import coil3.request.ImageRequest
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.ibm.icu.util.ULocale
+import com.mateusrodcosta.apps.lontramusic.data.ArtworkModel
 import com.mateusrodcosta.apps.lontramusic.data.LibraryIndex
 import com.mateusrodcosta.apps.lontramusic.data.PlayerManager
 import com.mateusrodcosta.apps.lontramusic.data.Preferences
@@ -60,6 +64,7 @@ import com.mateusrodcosta.apps.lontramusic.ui.views.player.PlayerScreen
 import com.mateusrodcosta.apps.lontramusic.utils.combine
 import com.mateusrodcosta.apps.lontramusic.utils.roundToIntOrZero
 import com.mateusrodcosta.apps.lontramusic.utils.trimAndNormalize
+import com.mateusrodcosta.apps.lontramusic.utils.wrap
 import java.lang.ref.WeakReference
 import java.net.URLConnection
 import java.util.Locale
@@ -154,6 +159,38 @@ class MainActivity : ComponentActivity(), IntentLauncher {
                     playerScreenDragState.coroutineScope = WeakReference(coroutineScope)
                     uiManager.playerScreenQueueDragState.coroutineScope =
                         WeakReference(coroutineScope)
+                }
+
+                LaunchedEffect(viewModel.playerManager.state, viewModel.libraryIndex) {
+                    val context = this@MainActivity
+                    val imageLoader = SingletonImageLoader.get(context)
+                    viewModel.playerManager.state.combine(
+                        this,
+                        viewModel.libraryIndex
+                    ) { state, library ->
+                        val queue = state.actualPlayQueue
+                        if (queue.isNotEmpty()) {
+                            val curr = state.currentIndex
+                            val repeat = state.repeat != Player.REPEAT_MODE_OFF
+                            val prevIndex = (curr - 1).wrap(queue.size, repeat)
+                            val nextIndex = (curr + 1).wrap(queue.size, repeat)
+
+                            listOfNotNull(prevIndex, nextIndex).distinct().forEach { idx ->
+                                val trackId = queue.getOrNull(idx) ?: return@forEach
+                                val track = library.tracks[trackId] ?: return@forEach
+                                if (track.hasArtwork) {
+                                    val model = ArtworkModel(
+                                        type = track.artworkType,
+                                        source = track.artworkSourcePath,
+                                        hash = track.artworkHash,
+                                        id = track.id,
+                                        path = track.path,
+                                    )
+                                    imageLoader.enqueue(ImageRequest.Builder(context).data(model).build())
+                                }
+                            }
+                        }
+                    }.collect()
                 }
 
                 LaunchedEffect(lifecycleState) {

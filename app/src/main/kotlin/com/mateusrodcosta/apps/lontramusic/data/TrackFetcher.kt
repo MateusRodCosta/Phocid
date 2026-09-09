@@ -12,6 +12,8 @@ import coil3.key.Keyer
 import coil3.request.Options
 import coil3.size.pxOrElse
 import java.io.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Immutable
 data class ArtworkModel(
@@ -53,21 +55,21 @@ class TrackFetcher(
     private val imageLoader: ImageLoader,
 ) : Fetcher {
 
-    override suspend fun fetch(): FetchResult? {
+    override suspend fun fetch(): FetchResult? = withContext(Dispatchers.IO) {
         val context = options.context
 
         // 1. Direct Routing: If it's an external file, let Coil handle it natively
         if (data.type == ArtworkType.EXTERNAL && data.source != null) {
             val file = File(data.source)
             if (file.exists()) {
-                return imageLoader.components.newFetcher(file, options, imageLoader)?.first?.fetch()
+                return@withContext imageLoader.components.newFetcher(file, options, imageLoader)?.first?.fetch()
             }
         }
 
         // 2. Direct Routing: If it's MediaStore, let Coil handle the Uri natively
         if (data.type == ArtworkType.MEDIA_STORE && data.source != null) {
             val uri = data.source.toUri()
-            return imageLoader.components.newFetcher(uri, options, imageLoader)?.first?.fetch()
+            return@withContext imageLoader.components.newFetcher(uri, options, imageLoader)?.first?.fetch()
         }
 
         // 3. Fallback/Embedded: Use our custom loader for Opus/Ogg or if direct routing failed
@@ -81,11 +83,11 @@ class TrackFetcher(
             highRes = true,
             sizeLimit = sizeLimit,
             crop = true
-        ) ?: return null
+        ) ?: return@withContext null
 
-        return ImageFetchResult(
+        ImageFetchResult(
             image = bitmap.asImage(),
-            isSampled = true,
+            isSampled = sizeLimit != null,
             dataSource = DataSource.DISK
         )
     }
@@ -100,13 +102,16 @@ class TrackFetcher(
 class TrackKeyer : Keyer<ArtworkModel> {
     override fun key(data: ArtworkModel, options: Options): String {
         return when (data.type) {
-            ArtworkType.EXTERNAL -> "folder_${data.source}"
+            ArtworkType.EXTERNAL -> {
+                val lastModified = data.source?.let { File(it).lastModified() } ?: 0L
+                "folder_${data.source}_$lastModified"
+            }
             ArtworkType.MEDIA_STORE -> "uri_${data.source}"
             ArtworkType.EMBEDDED -> {
                 if (data.hash != null) "embedded_${data.hash}"
                 else "track_${data.id}"
             }
-            ArtworkType.NONE -> "none"
+            ArtworkType.NONE -> "none_${data.id}"
         }
     }
 }

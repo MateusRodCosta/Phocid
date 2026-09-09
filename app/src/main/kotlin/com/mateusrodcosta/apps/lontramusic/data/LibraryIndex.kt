@@ -1702,41 +1702,46 @@ private suspend fun scanTrack(
     } else if (cacheKey != null && scanCache.palette.containsKey(cacheKey)) {
         scanCache.palette[cacheKey]!!
     } else {
-        val model = ArtworkModel(
-            type = when (resolvedArtwork.type) {
-                ArtworkSourceType.EMBEDDED -> ArtworkType.EMBEDDED
-                ArtworkSourceType.EXTERNAL -> ArtworkType.EXTERNAL
-                ArtworkSourceType.MEDIA_STORE -> ArtworkType.MEDIA_STORE
-            },
-            source = resolvedArtwork.source,
-            hash = artworkHash,
-            id = id,
-            path = path
-        )
-        val request = ImageRequest.Builder(context)
-            .data(model)
-            .size(64, 64)
-            .allowHardware(false)
-            .build()
-        val bitmap = SingletonImageLoader.get(context).execute(request).image?.toBitmap()
-        val softwareBitmap = if (bitmap?.config == Bitmap.Config.HARDWARE) {
-            bitmap.copy(Bitmap.Config.ARGB_8888, false)
-        } else bitmap
-        val palette = softwareBitmap
-            ?.let { Palette.from(it) }
-            ?.clearTargets()
-            ?.apply {
-                addTarget(Target.VIBRANT)
-                addTarget(Target.MUTED)
+        try {
+            val model = ArtworkModel(
+                type = when (resolvedArtwork.type) {
+                    ArtworkSourceType.EMBEDDED -> ArtworkType.EMBEDDED
+                    ArtworkSourceType.EXTERNAL -> ArtworkType.EXTERNAL
+                    ArtworkSourceType.MEDIA_STORE -> ArtworkType.MEDIA_STORE
+                },
+                source = resolvedArtwork.source,
+                hash = artworkHash,
+                id = id,
+                path = path
+            )
+            val request = ImageRequest.Builder(context)
+                .data(model)
+                .size(64, 64)
+                .allowHardware(false)
+                .build()
+            val bitmap = SingletonImageLoader.get(context).execute(request).image?.toBitmap()
+            val softwareBitmap = if (bitmap?.config == Bitmap.Config.HARDWARE) {
+                bitmap.copy(Bitmap.Config.ARGB_8888, false)
+            } else bitmap
+            val palette = softwareBitmap
+                ?.let { Palette.from(it) }
+                ?.clearTargets()
+                ?.apply {
+                    addTarget(Target.VIBRANT)
+                    addTarget(Target.MUTED)
+                }
+                ?.generate()
+            val vibrant = palette?.getSwatchForTarget(Target.VIBRANT)?.rgb?.let { Color(it) }
+            val muted = palette?.getSwatchForTarget(Target.MUTED)?.rgb?.let { Color(it) }
+            val result = vibrant to muted
+            if (cacheKey != null) {
+                scanCache.palette[cacheKey] = result
             }
-            ?.generate()
-        val vibrant = palette?.getSwatchForTarget(Target.VIBRANT)?.rgb?.let { Color(it) }
-        val muted = palette?.getSwatchForTarget(Target.MUTED)?.rgb?.let { Color(it) }
-        val result = vibrant to muted
-        if (cacheKey != null) {
-            scanCache.palette[cacheKey] = result
+            result
+        } catch (ex: Exception) {
+            Log.e("LontraMusic", "Error extracting palette for $path", ex)
+            null to null
         }
-        result
     }
 
     return crudeTrack.copy(

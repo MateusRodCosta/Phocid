@@ -114,7 +114,9 @@ class MainApplication : Application(), SingletonImageLoader.Factory {
                         SaveManager(context, ioScope, playerState, Constants.PLAYER_STATE_FILE_NAME, false)
 
                 defaultScope.launch {
-                    playerState.onEach { MainAppWidget().updateAll(context) }.collect()
+                    playerState.combine(defaultScope, libraryIndex) { state, _ -> state }
+                        .onEach { MainAppWidget().updateAll(context) }
+                        .collect()
                 }
 
                 initialized.complete(Unit)

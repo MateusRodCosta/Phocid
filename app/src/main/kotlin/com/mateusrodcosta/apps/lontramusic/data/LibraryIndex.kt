@@ -52,7 +52,6 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
@@ -1422,11 +1421,12 @@ suspend fun scanTracks(
             .let { it.availMem - it.threshold }
     val processorCount = Runtime.getRuntime().availableProcessors().coerceAtLeast(1)
     val overheadFactor = 3.0
-    // Cast to double to prevent division by zero
+    // Cap estimated track size to 50MB so giant files don't collapse parallelism to 1
+    val effectiveTrackSize = maxSize.coerceAtMost(50L * 1024L * 1024L).coerceAtLeast(5L * 1024L * 1024L)
     val parallelism =
         if (maxSize == 0L) 1
         else
-            floor(freeMemory.toDouble() / maxSize / overheadFactor)
+            floor(freeMemory.toDouble() / effectiveTrackSize / overheadFactor)
                 .toInt()
                 .coerceInOrMin(1, min(processorCount, 4))
     Log.d(
@@ -1506,7 +1506,7 @@ class ScanCache {
  * precision and might be unreliable while OpusMetadataIo will take 100x time to read the duration,
  * so we need to manually extract duration if and only if MediaStore isn't working.
  */
-private fun scanTrack(
+private suspend fun scanTrack(
     context: Context,
     advancedMetadataExtraction: Boolean,
     disableArtworkColorExtraction: Boolean,
@@ -1718,9 +1718,7 @@ private fun scanTrack(
             .size(64, 64)
             .allowHardware(false)
             .build()
-        val palette = runBlocking {
-            SingletonImageLoader.get(context).execute(request).image?.toBitmap()
-        }
+        val palette = SingletonImageLoader.get(context).execute(request).image?.toBitmap()
             ?.let { Palette.from(it) }
             ?.clearTargets()
             ?.apply {

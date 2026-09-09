@@ -1487,10 +1487,13 @@ private val yearRegexes =
         Regex("^.*?(?<year>[0-9]+).*?$"),
     )
 
+class OptionalArtwork(val artwork: ResolvedArtwork?)
+class OptionalHash(val hash: Long?)
+
 class ScanCache {
     val palette = ConcurrentHashMap<String, Pair<Color?, Color?>>()
-    val artworkSource = ConcurrentHashMap<String, ResolvedArtwork?>()
-    val artworkHash = ConcurrentHashMap<String, Long?>()
+    val folderArtwork = ConcurrentHashMap<String, OptionalArtwork>()
+    val artworkHash = ConcurrentHashMap<String, OptionalHash>()
 }
 
 /**
@@ -1511,7 +1514,6 @@ private fun scanTrack(
 ): Track {
     val id = crudeTrack.id
     val path = crudeTrack.path
-    val folder = path.substringBeforeLast('/', "")
 
     var title = crudeTrack.title
     var artists = crudeTrack.artists
@@ -1679,16 +1681,10 @@ private fun scanTrack(
     albumArtists = splitArtists(null, albumArtists, artistSeparators, artistSeparatorExceptions)
     genres = splitGenres(genres, genreSeparators, genreSeparatorExceptions)
 
-    val artworkHash = scanCache.artworkHash.getOrPut(path) { getEmbeddedArtworkHash(path) }
-    val resolvedArtwork = scanCache.artworkSource.getOrPut(folder) {
-        resolveArtworkSource(path, crudeTrack.uri)
-    }?.let { resolved ->
-        // If it was embedded, we must verify it's for THIS track, otherwise it might be 
-        // a different embedded art in the same folder.
-        if (resolved.type == ArtworkSourceType.EMBEDDED && resolved.source != path) {
-             resolveArtworkSource(path, crudeTrack.uri)
-        } else resolved
-    }
+    val artworkHash = scanCache.artworkHash.getOrPut(path) {
+        OptionalHash(getEmbeddedArtworkHash(path))
+    }.hash
+    val resolvedArtwork = resolveArtworkSource(path, crudeTrack.uri, scanCache)
 
     val cacheKey = when (resolvedArtwork?.type) {
         ArtworkSourceType.EMBEDDED -> artworkHash?.let { "hash_$it" }

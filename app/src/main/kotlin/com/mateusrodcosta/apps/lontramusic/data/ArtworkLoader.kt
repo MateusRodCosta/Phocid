@@ -66,9 +66,10 @@ data class ResolvedArtwork(
 fun resolveArtworkSource(
     path: String?,
     uri: Uri,
+    scanCache: ScanCache? = null,
 ): ResolvedArtwork? {
-    // 1. Check embedded (using library which is prioritized in loadArtwork)
     if (path != null) {
+        // 1. Check embedded
         val extension = FilenameUtils.getExtension(path).lowercase()
         val hasEmbedded = try {
             if (extension == "opus" || extension == "ogg") {
@@ -87,20 +88,30 @@ fun resolveArtworkSource(
             false
         }
         if (hasEmbedded) return ResolvedArtwork(ArtworkSourceType.EMBEDDED, path)
+
+        // 2. Check folder external artwork file (e.g. cover.jpg, folder.jpg)
+        val folder = path.substringBeforeLast('/', "")
+        val folderArtwork = if (scanCache != null) {
+            scanCache.folderArtwork.getOrPut(folder) {
+                OptionalArtwork(findExternalArtworkFile(path)?.absolutePath?.let {
+                    ResolvedArtwork(ArtworkSourceType.EXTERNAL, it)
+                })
+            }.artwork
+        } else {
+            findExternalArtworkFile(path)?.absolutePath?.let {
+                ResolvedArtwork(ArtworkSourceType.EXTERNAL, it)
+            }
+        }
+        if (folderArtwork != null) return folderArtwork
     }
 
-    // 2. Check external files
-    val externalFile = findExternalArtworkFile(path)
-    if (externalFile != null) return ResolvedArtwork(ArtworkSourceType.EXTERNAL, externalFile.absolutePath)
-
-    // 3. Fallback to MediaStore (we assume it might have it if the others don't)
+    // 3. Fallback to MediaStore
     return ResolvedArtwork(ArtworkSourceType.MEDIA_STORE, uri.toString())
 }
 
 private fun findExternalArtworkFile(path: String?): File? {
     if (path == null) return null
 
-    val trackName = FilenameUtils.getBaseName(path)
     val directoryName = FilenameUtils.getName(FilenameUtils.getPathNoEndSeparator(path))
     val files = try {
         File(FilenameUtils.getPath(path)).listFiles() ?: emptyArray()
@@ -109,16 +120,15 @@ private fun findExternalArtworkFile(path: String?): File? {
     }
 
     return files
-        .mapNotNull {
-            val name = it.nameWithoutExtension
-            val extension = it.extension
+        .mapNotNull { file ->
+            val name = file.nameWithoutExtension
+            val extension = file.extension
             val extensionScore = imageFileExtensionScores[extension.lowercase()] ?: return@mapNotNull null
             val nameScore = when {
-                name.equals(trackName, true) -> 999
                 name.equals(directoryName, true) -> 998
                 else -> imageFileNameScores[name.lowercase()] ?: return@mapNotNull null
             }
-            it to (nameScore * 1000 + extensionScore)
+            file to (nameScore * 1000 + extensionScore)
         }
         .sortedByDescending { it.second }
         .firstOrNull()?.first

@@ -100,39 +100,41 @@ fun PlayerScreen(dragLock: DragLock, viewModel: MainViewModel = viewModel()) {
     val libraryIndex by viewModel.libraryIndex.collectAsStateWithLifecycle()
 
     val playerState by playerManager.state.collectAsStateWithLifecycle()
-    val playerTransientStateVersion by
-        playerManager.transientState
-            .map(coroutineScope) { it.version }
-            .collectAsStateWithLifecycle()
-    val playQueue by
-        playerManager.state
-            .combine(coroutineScope, viewModel.libraryIndex) { state, library ->
+    val playerTransientStateVersionFlow =
+        remember(playerManager.transientState, coroutineScope) {
+            playerManager.transientState.map(coroutineScope) { it.version }
+        }
+    val playerTransientStateVersion by playerTransientStateVersionFlow.collectAsStateWithLifecycle()
+
+    val playQueueFlow =
+        remember(playerManager.state, viewModel.libraryIndex, coroutineScope) {
+            playerManager.state.combine(coroutineScope, viewModel.libraryIndex) { state, library ->
                 val trackCounts = mutableMapOf<Long, Int>()
                 state.actualPlayQueue
-                    .mapIndexed { index, id -> library.tracks[id] ?: InvalidTrack }
+                    .map { id -> library.tracks[id] ?: InvalidTrack }
                     .map { track ->
                         val occurrence = trackCounts.getOrPut(track.id) { 0 }
                         trackCounts[track.id] = trackCounts[track.id]!! + 1
                         (Pair(track.id, occurrence) as Any) to track
                     }
             }
-            .collectAsStateWithLifecycle()
-    val currentTrack by
-        remember {
-                playerManager.state
-                    .combine(viewModel.libraryIndex) { state, library ->
-                        if (state.actualPlayQueue.isEmpty()) null
-                        else library.tracks[state.actualPlayQueue[state.currentIndex]]
-                    }
-                    .filterNotNull()
+        }
+    val playQueue by playQueueFlow.collectAsStateWithLifecycle()
+    val currentTrack by remember {
+        playerManager.state
+            .combine(viewModel.libraryIndex) { state, library ->
+                if (state.actualPlayQueue.isEmpty()) null
+                else library.tracks[state.actualPlayQueue[state.currentIndex]]
             }
-            .collectAsStateWithLifecycle(
-                initialValue =
-                    if (playerState.actualPlayQueue.isEmpty()) InvalidTrack
-                    else
-                        libraryIndex.tracks[playerState.actualPlayQueue[playerState.currentIndex]]
-                            ?: InvalidTrack
-            )
+            .filterNotNull()
+    }
+        .collectAsStateWithLifecycle(
+            initialValue =
+                if (playerState.actualPlayQueue.isEmpty()) InvalidTrack
+                else
+                    libraryIndex.tracks[playerState.actualPlayQueue[playerState.currentIndex]]
+                        ?: InvalidTrack
+        )
     val currentTrackIndex = playerState.currentIndex
     val playlists by viewModel.playlistManager.playlists.collectAsStateWithLifecycle()
     val currentTrackIsFavorite =
@@ -158,14 +160,23 @@ fun PlayerScreen(dragLock: DragLock, viewModel: MainViewModel = viewModel()) {
                     }
             }
         }
-    val isPlaying by
-        playerManager.transientState
-            .map(coroutineScope) { it.isPlaying }
-            .collectAsStateWithLifecycle()
-    val repeat by
-        playerManager.state.map(coroutineScope) { it.repeat }.collectAsStateWithLifecycle()
-    val shuffle by
-        playerManager.state.map(coroutineScope) { it.shuffle }.collectAsStateWithLifecycle()
+    val isPlayingFlow =
+        remember(playerManager.transientState, coroutineScope) {
+            playerManager.transientState.map(coroutineScope) { it.isPlaying }
+        }
+    val isPlaying by isPlayingFlow.collectAsStateWithLifecycle()
+
+    val repeatFlow =
+        remember(playerManager.state, coroutineScope) {
+            playerManager.state.map(coroutineScope) { it.repeat }
+        }
+    val repeat by repeatFlow.collectAsStateWithLifecycle()
+
+    val shuffleFlow =
+        remember(playerManager.state, coroutineScope) {
+            playerManager.state.map(coroutineScope) { it.shuffle }
+        }
+    val shuffle by shuffleFlow.collectAsStateWithLifecycle()
 
     val defaultColor = LocalThemeAccent.current
     val artworkColor = remember {
@@ -319,9 +330,9 @@ fun PlayerScreen(dragLock: DragLock, viewModel: MainViewModel = viewModel()) {
         colorScheme =
             if (preferences.coloredPlayer)
                 customColorScheme(
-                    color = currentTrack.getArtworkColor(preferences.artworkColorPreference),
-                    darkTheme = preferences.darkTheme.boolean ?: isSystemInDarkTheme(),
-                )
+                        color = currentTrack.getArtworkColor(preferences.artworkColorPreference),
+                        darkTheme = preferences.darkTheme.boolean ?: isSystemInDarkTheme(),
+                    )
                     .let { if (preferences.pureBackgroundColor) it.pureBackgroundColor() else it }
             else MaterialTheme.colorScheme,
         shapes = MaterialTheme.shapes,
@@ -404,7 +415,8 @@ fun PlayerScreen(dragLock: DragLock, viewModel: MainViewModel = viewModel()) {
                             components.artwork.Compose(
                                 playerTransientStateVersion = playerTransientStateVersion,
                                 swipeThreshold =
-                                    Constants.DEFAULT_SWIPE_THRESHOLD * preferences.swipeThresholdMultiplier,
+                                    Constants.DEFAULT_SWIPE_THRESHOLD *
+                                        preferences.swipeThresholdMultiplier,
                                 artworkColorPreference = preferences.artworkColorPreference,
                                 playerState = playerState,
                                 playerScreenDragState = playerScreenDragState,
@@ -495,7 +507,8 @@ fun PlayerScreen(dragLock: DragLock, viewModel: MainViewModel = viewModel()) {
                                     playQueueDragState.position == 1f || playQueueDragTarget == 1f,
                                 swipeToRemoveFromQueue = preferences.swipeToRemoveFromQueue,
                                 swipeThreshold =
-                                    Constants.DEFAULT_SWIPE_THRESHOLD * preferences.swipeThresholdMultiplier,
+                                    Constants.DEFAULT_SWIPE_THRESHOLD *
+                                        preferences.swipeThresholdMultiplier,
                                 alwaysShowHintOnScroll = preferences.alwaysShowHintOnScroll,
                                 onTogglePlayQueue = {
                                     playQueueDragState.animateTo(

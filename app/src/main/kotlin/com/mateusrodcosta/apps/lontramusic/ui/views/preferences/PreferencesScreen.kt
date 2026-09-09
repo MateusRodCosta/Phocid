@@ -222,12 +222,15 @@ private class PreferencesSubscreen(private val page: Page) : TopLevelScreen() {
         val context = LocalContext.current
         val coroutineScope = rememberCoroutineScope()
         val preferences by viewModel.preferences.collectAsStateWithLifecycle()
-        val filteredTrackCount by
-            viewModel.unfilteredTrackIndex
-                .combine(coroutineScope, viewModel.libraryIndex) { unfiltered, filtered ->
+        val filteredTrackCountFlow =
+            remember(viewModel.unfilteredTrackIndex, viewModel.libraryIndex, coroutineScope) {
+                viewModel.unfilteredTrackIndex.combine(coroutineScope, viewModel.libraryIndex) {
+                    unfiltered,
+                    filtered ->
                     unfiltered.tracks.size - filtered.tracks.size
                 }
-                .collectAsStateWithLifecycle()
+            }
+        val filteredTrackCount by filteredTrackCountFlow.collectAsStateWithLifecycle()
         val logcatDumpPath = remember {
             context.getExternalFilesDir(null)?.let { FilenameUtils.concat(it.path, "logcat.txt") }
         }
@@ -307,7 +310,8 @@ private class PreferencesSubscreen(private val page: Page) : TopLevelScreen() {
                                                             preferencesScreenContext.third()
                                                         }
                                                     },
-                                                    modifier = Modifier.negativePadding(end = 12.dp),
+                                                    modifier =
+                                                        Modifier.negativePadding(end = 12.dp),
                                                 ) {
                                                     Icon(item.action.second, item.action.first())
                                                 }
@@ -635,7 +639,9 @@ private val HomeScreen =
                 icon = Icons.Filled.AdsClick,
                 options = LibraryTrackClickAction.entries,
                 value = { it.libraryTrackClickAction },
-                onSetValue = { preferences, new -> preferences.copy(libraryTrackClickAction = new) },
+                onSetValue = { preferences, new ->
+                    preferences.copy(libraryTrackClickAction = new)
+                },
             ),
             Item.SingleChoice(
                 title = { Strings[R.string.preferences_sorting_language] },
@@ -749,7 +755,9 @@ private val Playback =
                 icon = Icons.Filled.ShuffleOn,
                 options = DefaultShuffleMode.entries,
                 value = { it.defaultShuffleModeTrack },
-                onSetValue = { preferences, new -> preferences.copy(defaultShuffleModeTrack = new) },
+                onSetValue = { preferences, new ->
+                    preferences.copy(defaultShuffleModeTrack = new)
+                },
             ),
             Item.SingleChoice(
                 title = { Strings[R.string.preferences_default_shuffle_mode_list] },

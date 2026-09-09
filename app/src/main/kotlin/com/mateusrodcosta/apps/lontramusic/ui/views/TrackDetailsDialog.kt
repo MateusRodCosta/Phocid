@@ -95,17 +95,14 @@ class TrackDetailsDialog(private val track: Track) : Dialog() {
                 val horizontalSpacing = 16.dp.roundToPx()
                 val verticalSpacing = 4.dp.roundToPx()
                 val pairs = measurables.chunked(2)
-                val keys =
-                    pairs.map {
-                        it[0].measure(
-                            Constraints(
-                                maxWidth =
-                                    ((constraints.maxWidth - horizontalSpacing) / 2).coerceAtLeast(
-                                        0
-                                    )
-                            )
+                val keys = pairs.map {
+                    it[0].measure(
+                        Constraints(
+                            maxWidth =
+                                ((constraints.maxWidth - horizontalSpacing) / 2).coerceAtLeast(0)
                         )
-                    }
+                    )
+                }
                 val keyWidth = keys.maxOf { it.width }
                 val valueWidth =
                     (constraints.maxWidth - keyWidth - horizontalSpacing).coerceAtLeast(0)

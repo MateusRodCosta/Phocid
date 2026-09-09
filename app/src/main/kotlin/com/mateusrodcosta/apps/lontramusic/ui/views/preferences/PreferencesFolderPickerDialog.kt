@@ -98,9 +98,7 @@ class PreferencesFolderPickerDialog(
                     LazyColumn(
                         state = lazyListState,
                         modifier =
-                            Modifier.background(
-                                MaterialTheme.colorScheme.surfaceContainer
-                            )
+                            Modifier.background(MaterialTheme.colorScheme.surfaceContainer)
                                 .fillMaxHeight(),
                     ) {
                         items(currentFolder.childFolders) { childFolder ->

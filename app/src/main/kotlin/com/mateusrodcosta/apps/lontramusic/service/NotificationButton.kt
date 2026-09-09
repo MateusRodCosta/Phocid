@@ -65,7 +65,9 @@ enum class NotificationButton(
                         Strings[R.string.player_now_playing_remove_favorites]
                     else Strings[R.string.player_now_playing_add_favorites]
                 )
-                .setSessionCommand(SessionCommand(Constants.EXTERNAL_FAVORITE_COMMAND, Bundle.EMPTY))
+                .setSessionCommand(
+                    SessionCommand(Constants.EXTERNAL_FAVORITE_COMMAND, Bundle.EMPTY)
+                )
                 .setSlots(CommandButton.SLOT_OVERFLOW)
                 .build()
         },

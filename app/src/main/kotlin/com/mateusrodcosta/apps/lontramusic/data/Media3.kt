@@ -116,22 +116,19 @@ fun transformMediaSessionCallbackItems(
     /** These only contain valid [MediaItem.mediaId]s; all other fields are null */
     mediaItems: List<MediaItem>,
 ): List<MediaItem> {
-    var items =
-        mediaItems.mapNotNull {
-            val trackId = it.mediaId.toLongOrNull()
-            if (trackId != null) libraryIndex.tracks[it.mediaId.toLongOrNull()]?.getMediaItem(null)
-            else it
-        }
+    var items = mediaItems.mapNotNull {
+        val trackId = it.mediaId.toLongOrNull()
+        if (trackId != null) libraryIndex.tracks[it.mediaId.toLongOrNull()]?.getMediaItem(null)
+        else it
+    }
     while (items.any { it.mediaId.firstOrNull()?.isDigit() == false }) {
-        items =
-            items.flatMap {
-                if (it.mediaMetadata.mediaType != MediaMetadata.MEDIA_TYPE_MUSIC) {
-                    getChildMediaItems(preferences, libraryIndex, playlists, it.mediaId)
-                        ?: emptyList()
-                } else {
-                    listOf(it)
-                }
+        items = items.flatMap {
+            if (it.mediaMetadata.mediaType != MediaMetadata.MEDIA_TYPE_MUSIC) {
+                getChildMediaItems(preferences, libraryIndex, playlists, it.mediaId) ?: emptyList()
+            } else {
+                listOf(it)
             }
+        }
     }
 
     return items

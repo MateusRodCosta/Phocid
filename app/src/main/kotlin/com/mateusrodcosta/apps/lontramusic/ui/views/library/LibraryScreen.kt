@@ -175,18 +175,20 @@ fun LibraryScreen(
     val homeViewState = uiManager.libraryScreenHomeViewState
     val collectionViewStack by
         uiManager.libraryScreenCollectionViewStack.collectAsStateWithLifecycle()
-    val collectionInfos by
-        uiManager.libraryScreenCollectionViewStack
-            .flatMapLatest(coroutineScope) { states ->
-                states.map { it.info }.combine(coroutineScope)
-            }
-            .runningReduce(coroutineScope) { last, current ->
-                current.mapIndexed { index, info ->
-                    info ?: (last.getOrNull(index) ?: InvalidCollectionViewInfo)
+    val collectionInfosFlow =
+        remember(uiManager, coroutineScope) {
+            uiManager.libraryScreenCollectionViewStack
+                .flatMapLatest(coroutineScope) { states ->
+                    states.map { it.info }.combine(coroutineScope)
                 }
-            }
-            .map(coroutineScope) { infos -> infos.map { it ?: InvalidCollectionViewInfo } }
-            .collectAsStateWithLifecycle()
+                .runningReduce(coroutineScope) { last, current ->
+                    current.mapIndexed { index, info ->
+                        info ?: (last.getOrNull(index) ?: InvalidCollectionViewInfo)
+                    }
+                }
+                .map(coroutineScope) { infos -> infos.map { it ?: InvalidCollectionViewInfo } }
+        }
+    val collectionInfos by collectionInfosFlow.collectAsStateWithLifecycle()
     val currentCollection = collectionViewStack.lastOrNull()
     val currentCollectionType = collectionInfos.lastOrNull()?.type
     val currentHomeTabIndex =
@@ -631,12 +633,10 @@ private fun HomeSearchBar(value: String, onValueChange: (String) -> Unit) {
                     }
                 }
                 if (value.isNotEmpty()) {
-                    IconButton(
-                        {
-                            onValueChange("")
-                            focusManager.clearFocus()
-                        }
-                    ) {
+                    IconButton({
+                        onValueChange("")
+                        focusManager.clearFocus()
+                    }) {
                         Icon(Icons.Filled.Clear, Strings[R.string.commons_clear])
                     }
                 }
@@ -742,22 +742,28 @@ private fun BottomBar(
     var progress by remember { mutableFloatStateOf(0f) }
 
     val playerState by playerManager.state.collectAsStateWithLifecycle()
-    val currentTrack by
-        playerManager.state
-            .map(coroutineScope) { state ->
-                val id = state.actualPlayQueue.getOrNull(state.currentIndex)
-                if (id != null) libraryIndex.tracks[id] ?: InvalidTrack else null
-            }
-            .runningReduce(coroutineScope) { last, current -> current ?: last }
-            .collectAsStateWithLifecycle()
-    val isPlaying by
-        playerManager.transientState
-            .map(coroutineScope) { it.isPlaying }
-            .collectAsStateWithLifecycle()
-    val playerTransientStateVersion by
-        playerManager.transientState
-            .map(coroutineScope) { it.version }
-            .collectAsStateWithLifecycle()
+    val currentTrackFlow =
+        remember(playerManager.state, libraryIndex, coroutineScope) {
+            playerManager.state
+                .map(coroutineScope) { state ->
+                    val id = state.actualPlayQueue.getOrNull(state.currentIndex)
+                    if (id != null) libraryIndex.tracks[id] ?: InvalidTrack else null
+                }
+                .runningReduce(coroutineScope) { last, current -> current ?: last }
+        }
+    val currentTrack by currentTrackFlow.collectAsStateWithLifecycle()
+
+    val isPlayingFlow =
+        remember(playerManager.transientState, coroutineScope) {
+            playerManager.transientState.map(coroutineScope) { it.isPlaying }
+        }
+    val isPlaying by isPlayingFlow.collectAsStateWithLifecycle()
+
+    val playerTransientStateVersionFlow =
+        remember(playerManager.transientState, coroutineScope) {
+            playerManager.transientState.map(coroutineScope) { it.version }
+        }
+    val playerTransientStateVersion by playerTransientStateVersionFlow.collectAsStateWithLifecycle()
 
     val animatedThemeAccent = animateColorAsState(LocalThemeAccent.current)
 

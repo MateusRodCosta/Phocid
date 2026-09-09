@@ -57,17 +57,16 @@ class MultiSelectState<T>(
     private val _items = MutableStateFlow(SelectableList<T>(emptyList()))
     val items = _items.asStateFlow()
     private val lastSelectionIndex = AtomicInteger(-1)
-    private val syncJob =
-        coroutineScope.launch {
-            dataSource
-                .onEach { source ->
-                    _items.update {
-                        source.map { value -> Selectable(value, false) }.toSelectableList()
-                    }
-                    lastSelectionIndex.set(-1)
+    private val syncJob = coroutineScope.launch {
+        dataSource
+            .onEach { source ->
+                _items.update {
+                    source.map { value -> Selectable(value, false) }.toSelectableList()
                 }
-                .collect()
-        }
+                lastSelectionIndex.set(-1)
+            }
+            .collect()
+    }
 
     override fun close() {
         syncJob.cancel()

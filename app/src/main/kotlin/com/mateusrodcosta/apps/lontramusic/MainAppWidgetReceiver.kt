@@ -76,7 +76,6 @@ import com.mateusrodcosta.apps.lontramusic.ui.theme.surfaceDark
 import com.mateusrodcosta.apps.lontramusic.ui.theme.surfaceLight
 import com.mateusrodcosta.apps.lontramusic.ui.theme.toGlanceStyle
 import com.mateusrodcosta.apps.lontramusic.utils.combine
-import java.util.Locale
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -227,7 +226,8 @@ class MainAppWidget : GlanceAppWidget() {
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier =
-                                    GlanceModifier.padding(start = 24.dp, end = 12.dp).fillMaxSize(),
+                                    GlanceModifier.padding(start = 24.dp, end = 12.dp)
+                                        .fillMaxSize(),
                             ) {
                                 Box(modifier = GlanceModifier.defaultWeight()) {
                                     TrackInfo(track, contentColor, contentColorVariant)
@@ -298,7 +298,8 @@ class MainAppWidget : GlanceAppWidget() {
                                         contentColor,
                                         spread = true,
                                         modifier =
-                                            GlanceModifier.fillMaxWidth().padding(bottom = (-14).dp),
+                                            GlanceModifier.fillMaxWidth()
+                                                .padding(bottom = (-14).dp),
                                     )
                                 }
                             }
@@ -329,7 +330,8 @@ class MainAppWidget : GlanceAppWidget() {
                                         contentColor,
                                         spread = true,
                                         modifier =
-                                            GlanceModifier.fillMaxWidth().padding(bottom = (-14).dp),
+                                            GlanceModifier.fillMaxWidth()
+                                                .padding(bottom = (-14).dp),
                                     )
                                 }
                             }
@@ -410,7 +412,9 @@ class MainAppWidget : GlanceAppWidget() {
             )
         }
 
-        val ltr = Locale.getDefault().layoutDirection != View.LAYOUT_DIRECTION_RTL
+        val ltr =
+            LocalContext.current.resources.configuration.layoutDirection !=
+                View.LAYOUT_DIRECTION_RTL
 
         Row(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
             if (ltr) Previous() else Next()
@@ -453,7 +457,9 @@ class MainAppWidget : GlanceAppWidget() {
                     GlanceModifier.background(
                             ImageProvider(resId),
                             colorFilter =
-                                ColorFilter.tint(@SuppressLint("RestrictedApi") ColorProvider(tint)),
+                                ColorFilter.tint(
+                                    @SuppressLint("RestrictedApi") ColorProvider(tint)
+                                ),
                         )
                         .size(24.dp)
             ) {}

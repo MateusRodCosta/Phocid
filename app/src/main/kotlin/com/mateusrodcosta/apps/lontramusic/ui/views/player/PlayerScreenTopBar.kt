@@ -174,7 +174,8 @@ object PlayerScreenTopBarDefaultStandalone : PlayerScreenTopBar() {
                             IconButton(onClick = onEnableLyricsViewAutoScroll) {
                                 Icon(
                                     Icons.Outlined.VerticalAlignCenter,
-                                    contentDescription = Strings[R.string.player_lyrics_auto_scroll],
+                                    contentDescription =
+                                        Strings[R.string.player_lyrics_auto_scroll],
                                 )
                             }
                         }

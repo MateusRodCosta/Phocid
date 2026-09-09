@@ -58,7 +58,11 @@ class LibraryIndexTest {
         val track2 = track(2, album = "ALBUM1", albumArtist = "artist1")
         val track3 = track(3, album = "ALBUM1", albumArtist = "ARTIST1")
         val index = listOf(track1, track2, track3).libraryIndex()
-        assertThat(index.albums.keys.map { it.name.toString() to it.albumArtists.firstOrNull()?.toString() })
+        assertThat(
+                index.albums.keys.map {
+                    it.name.toString() to it.albumArtists.firstOrNull()?.toString()
+                }
+            )
             .containsExactlyInAnyOrder("ALBUM1" to "artist1")
     }
 

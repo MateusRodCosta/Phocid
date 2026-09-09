@@ -33,25 +33,24 @@ class SaveManager<T : Any>(
     fileName: String,
     isCache: Boolean,
 ) : AutoCloseable {
-    private val job =
-        coroutineScope.launch {
-            withContext(Dispatchers.IO) {
-                var lastSavedVersion = 0
-                flow
-                    .withIndex()
-                    .conflate()
-                    .onEach { (version, value) ->
-                        if (lastSavedVersion < version) {
-                            if (saveCbor(kType, context, fileName, isCache, value)) {
-                                lastSavedVersion = version
-                            }
+    private val job = coroutineScope.launch {
+        withContext(Dispatchers.IO) {
+            var lastSavedVersion = 0
+            flow
+                .withIndex()
+                .conflate()
+                .onEach { (version, value) ->
+                    if (lastSavedVersion < version) {
+                        if (saveCbor(kType, context, fileName, isCache, value)) {
+                            lastSavedVersion = version
                         }
-                        delay(1.seconds)
                     }
-                    .cancellable()
-                    .collect()
-            }
+                    delay(1.seconds)
+                }
+                .cancellable()
+                .collect()
         }
+    }
 
     override fun close() {
         job.cancel()

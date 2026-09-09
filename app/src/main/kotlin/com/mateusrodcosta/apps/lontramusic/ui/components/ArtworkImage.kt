@@ -65,13 +65,10 @@ fun ArtworkImage(
 
     Box(modifier = modifier.clip(shape)) {
         val color =
-            remember(artwork, artworkColorPreference) {
-                artwork.getColor(artworkColorPreference)
-            }
+            remember(artwork, artworkColorPreference) { artwork.getColor(artworkColorPreference) }
 
         val backgroundColor =
-            if (darkTheme) lerp(color, Color.Black, 0.4f)
-            else lerp(color, Color.White, 0.9f)
+            if (darkTheme) lerp(color, Color.Black, 0.4f) else lerp(color, Color.White, 0.9f)
 
         if (artwork is Artwork.Track && artwork.track.artworkType != ArtworkType.NONE) {
             val artworkModel =
@@ -91,12 +88,13 @@ fun ArtworkImage(
                 }
 
             val context = LocalContext.current
-            val request = remember(artworkModel) {
-                ImageRequest.Builder(context)
-                    .data(artworkModel)
-                    .crossfade(true)
-                    .build()
-            }
+            val request =
+                remember(artworkModel) {
+                    ImageRequest.Builder(context)
+                        .data(artworkModel)
+                        .crossfade(enable = true)
+                        .build()
+                }
 
             Box(modifier = Modifier.fillMaxSize().background(backgroundColor))
 

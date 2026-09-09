@@ -77,8 +77,8 @@ class PreferencesOrderAndVisibilityDialog<T : Any>(
             LazyColumn(state = lazyListState) {
                 itemsIndexed(
                     reorderingItems ?: value(preferences),
-                    { _, (type, _) -> type }) { index,
-                                                (type, visibility) ->
+                    { _, (type, _) -> type },
+                ) { index, (type, visibility) ->
                     ReorderableItem(reorderableLazyListState, type) { isDragging ->
                         UtilityCheckBoxListItem(
                             text = itemName(type),

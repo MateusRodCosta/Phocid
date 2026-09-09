@@ -85,11 +85,10 @@ class PlaylistEditScreen(private val playlistKey: UUID) : TopLevelScreen() {
         val playlistManager = viewModel.playlistManager
         val playlists by playlistManager.playlists.collectAsStateWithLifecycle()
         val playlist = playlists[playlistKey]
-        val playlistName by
-            remember {
-                    playlistManager.playlists.map { it[playlistKey]?.displayName }.filterNotNull()
-                }
-                .collectAsState(playlist?.displayName)
+        val playlistName by remember {
+            playlistManager.playlists.map { it[playlistKey]?.displayName }.filterNotNull()
+        }
+            .collectAsState(playlist?.displayName)
 
         var reorderingPlaylist by remember { mutableStateOf(null as List<RealizedPlaylistEntry>?) }
         var reorderInfo by remember { mutableStateOf(null as Pair<Int, Int>?) }
@@ -281,7 +280,8 @@ class PlaylistEditScreen(private val playlistKey: UUID) : TopLevelScreen() {
                                                     onDragStarted = {
                                                         ViewCompat.performHapticFeedback(
                                                             view,
-                                                            HapticFeedbackConstantsCompat.DRAG_START,
+                                                            HapticFeedbackConstantsCompat
+                                                                .DRAG_START,
                                                         )
                                                         reorderInfo = null
                                                         reorderingPlaylist = playlist?.entries

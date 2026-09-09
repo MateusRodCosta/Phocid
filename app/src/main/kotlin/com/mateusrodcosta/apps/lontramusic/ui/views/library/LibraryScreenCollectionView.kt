@@ -167,7 +167,7 @@ sealed class LibraryScreenCollectionViewItemInfo :
                 track,
                 {
                     items.flatMap { it.playTracks } to
-                            items.take(index).sumOf { it.playTracks.size }
+                        items.take(index).sumOf { it.playTracks.size }
                 },
                 viewModel.playerManager,
                 viewModel.uiManager,
@@ -290,15 +290,15 @@ sealed class LibraryScreenCollectionViewItemInfo :
             viewModel: MainViewModel,
         ): List<MenuItem> {
             return playlistTrackMenuItems(playlistKey, playlistEntry.key, viewModel.uiManager) +
-                    trackMenuItemsLibrary(
-                        playTracks.first(),
-                        {
-                            items.flatMap { it.playTracks } to
-                                    items.take(index).sumOf { it.playTracks.size }
-                        },
-                        viewModel.playerManager,
-                        viewModel.uiManager,
-                    )
+                trackMenuItemsLibrary(
+                    playTracks.first(),
+                    {
+                        items.flatMap { it.playTracks } to
+                            items.take(index).sumOf { it.playTracks.size }
+                    },
+                    viewModel.playerManager,
+                    viewModel.uiManager,
+                )
         }
 
         override fun getMultiSelectMenuItems(
@@ -312,15 +312,15 @@ sealed class LibraryScreenCollectionViewItemInfo :
                 viewModel.uiManager,
                 continuation,
             ) +
-                    playlistTrackMenuItems(
-                        playlistKey,
-                        {
-                            setOf(playlistEntry.key) +
-                                    others.map { (it as PlaylistEntry).playlistEntry.key }
-                        },
-                        viewModel.uiManager,
-                        continuation,
-                    )
+                playlistTrackMenuItems(
+                    playlistKey,
+                    {
+                        setOf(playlistEntry.key) +
+                            others.map { (it as PlaylistEntry).playlistEntry.key }
+                    },
+                    viewModel.uiManager,
+                    continuation,
+                )
         }
     }
 }
@@ -993,17 +993,18 @@ fun LibraryScreenCollectionView(
                         LibraryListHeader(
                             Strings.separate(
                                 info.additionalStatistics +
-                                        listOf(
-                                            Strings[R.string.count_track].icuFormat(
-                                                items.sumOf { it.value.info.playTracks.size }
-                                            ),
-                                            totalDuration,
-                                        )
+                                    listOf(
+                                        Strings[R.string.count_track].icuFormat(
+                                            items.sumOf { it.value.info.playTracks.size }
+                                        ),
+                                        totalDuration,
+                                    )
                             )
                         )
                     }
-                    itemsIndexed(items, { _, (item, _) -> item.info.composeKey }) { index,
-                                                                                    (item, selected) ->
+                    itemsIndexed(items, { _, (item, _) -> item.info.composeKey }) {
+                        index,
+                        (item, selected) ->
                         val (info, _) = item
                         val menuState = remember { mutableStateOf(false) }
                         LibraryListItemHorizontal(
@@ -1045,15 +1046,15 @@ fun LibraryScreenCollectionView(
                             },
                             modifier =
                                 Modifier.multiSelectClickable(
-                                    items,
-                                    index,
-                                    multiSelectState,
-                                    haptics,
-                                ) {
-                                    info.onClick(itemInfos, index, viewModel) {
-                                        menuState.value = true
+                                        items,
+                                        index,
+                                        multiSelectState,
+                                        haptics,
+                                    ) {
+                                        info.onClick(itemInfos, index, viewModel) {
+                                            menuState.value = true
+                                        }
                                     }
-                                }
                                     .animateItem(fadeInSpec = null, fadeOutSpec = null),
                             selected = selected,
                             highlighted = searchResults.contains(index),

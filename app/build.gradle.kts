@@ -1,6 +1,6 @@
 import java.util.Properties
-import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
     alias(libs.plugins.dependency.analysis)
@@ -13,17 +13,14 @@ plugins {
 
 val keystorePropertiesFile = rootProject.file("key.properties")
 val keystoreProperties = Properties()
+
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(keystorePropertiesFile.inputStream())
 }
 
 android {
     namespace = "com.mateusrodcosta.apps.lontramusic"
-    compileSdk {
-        version = release(37) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk { version = release(37) { minorApiLevel = 1 } }
 
     defaultConfig {
         applicationId = "com.mateusrodcosta.apps.lontramusic"
@@ -63,15 +60,14 @@ android {
 
     buildTypes {
         release {
-            optimization {
-                enable = true
-            }
+            optimization { enable = true }
 
-            signingConfig = if (keystorePropertiesFile.exists()) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
-            }
+            signingConfig =
+                if (keystorePropertiesFile.exists()) {
+                    signingConfigs.getByName("release")
+                } else {
+                    signingConfigs.getByName("debug")
+                }
         }
 
         debug {
@@ -90,18 +86,14 @@ android {
         compose = true
         buildConfig = true
     }
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
-    }
+    packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
     dependenciesInfo {
         // Disables dependency metadata when building APKs.
         includeInApk = false
         // Disables dependency metadata when building Android App Bundles.
         includeInBundle = false
     }
-    androidResources{
+    androidResources {
         @Suppress("UnstableApiUsage")
         generateLocaleConfig = true
     }
@@ -169,7 +161,8 @@ ktfmt { kotlinLangStyle() }
 
 aboutLibraries {
     collect {
-        // Define the path configuration files are located in. E.g. additional libraries, licenses to add to the target .json
+        // Define the path configuration files are located in. E.g. additional libraries, licenses
+        // to add to the target .json
         configPath = file("../config")
     }
 }

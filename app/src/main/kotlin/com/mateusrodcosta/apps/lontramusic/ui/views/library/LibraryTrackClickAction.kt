@@ -20,7 +20,10 @@ enum class LibraryTrackClickAction(
     val icon: ImageVector?,
     val invoke:
         (
-        tracks: List<Track>, index: Int, playerManager: PlayerManager, uiManager: UiManager,
+            tracks: List<Track>,
+            index: Int,
+            playerManager: PlayerManager,
+            uiManager: UiManager,
         ) -> Unit,
 ) {
     OPEN_MENU(R.string.preferences_library_track_click_action_open_menu, null, { _, _, _, _ -> }),

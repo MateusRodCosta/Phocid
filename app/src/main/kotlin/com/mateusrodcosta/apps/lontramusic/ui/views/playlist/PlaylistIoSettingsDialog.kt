@@ -131,8 +131,8 @@ sealed class PlaylistIoSettingsDialogBase(
                     supportingText = {
                         Text(
                             Strings[
-                                R.string
-                                    .preferences_playlist_io_settings_export_relative_base_hint]
+                                    R.string
+                                        .preferences_playlist_io_settings_export_relative_base_hint]
                                 .icuFormat(
                                     Environment.getExternalStoragePublicDirectory(
                                         Environment.DIRECTORY_MUSIC

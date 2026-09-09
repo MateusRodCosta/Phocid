@@ -67,26 +67,27 @@ fun resolveArtworkSource(
     path: String?,
     uri: Uri,
     scanCache: ScanCache? = null,
-): ResolvedArtwork? {
+): ResolvedArtwork {
     if (path != null) {
         // 1. Check embedded
         val extension = FilenameUtils.getExtension(path).lowercase()
-        val hasEmbedded = try {
-            if (extension == "opus" || extension == "ogg") {
-                FileInputStream(File(path)).buffered().use { stream ->
-                    val metadata = readOpusMetadata(stream, false)
-                    metadata.userComments[VORBIS_COMMENT_METADATA_BLOCK_PICTURE]?.any { block ->
-                        decodeMetadataBlockPicture(block)?.let {
-                            imageMimeTypes.contains(it.mimeType.trimAndNormalize())
+        val hasEmbedded =
+            try {
+                if (extension == "opus" || extension == "ogg") {
+                    FileInputStream(File(path)).buffered().use { stream ->
+                        val metadata = readOpusMetadata(stream, false)
+                        metadata.userComments[VORBIS_COMMENT_METADATA_BLOCK_PICTURE]?.any { block ->
+                            decodeMetadataBlockPicture(block)?.let {
+                                imageMimeTypes.contains(it.mimeType.trimAndNormalize())
+                            } ?: false
                         } ?: false
-                    } ?: false
+                    }
+                } else {
+                    AudioFileIO.read(File(path)).tag.firstArtwork != null
                 }
-            } else {
-                AudioFileIO.read(File(path)).tag.firstArtwork != null
+            } catch (_: Exception) {
+                false
             }
-        } catch (_: Exception) {
-            false
-        }
         if (hasEmbedded) return ResolvedArtwork(ArtworkSourceType.EMBEDDED, path)
 
         // 2. Check external artwork file (e.g. trackName.jpg, cover.jpg, folder.jpg)
@@ -107,36 +108,40 @@ private fun findExternalArtworkFile(path: String?, scanCache: ScanCache? = null)
     val directoryName = FilenameUtils.getName(FilenameUtils.getPathNoEndSeparator(path))
     val folderPath = FilenameUtils.getPath(path)
 
-    val files = if (scanCache != null) {
-        scanCache.folderFiles.getOrPut(folderPath) {
+    val files =
+        if (scanCache != null) {
+            scanCache.folderFiles.getOrPut(folderPath) {
+                try {
+                    File(folderPath).listFiles() ?: emptyArray()
+                } catch (_: Exception) {
+                    emptyArray()
+                }
+            }
+        } else {
             try {
                 File(folderPath).listFiles() ?: emptyArray()
             } catch (_: Exception) {
                 emptyArray()
             }
         }
-    } else {
-        try {
-            File(folderPath).listFiles() ?: emptyArray()
-        } catch (_: Exception) {
-            emptyArray()
-        }
-    }
 
     return files
         .mapNotNull { file ->
             val name = file.nameWithoutExtension
             val extension = file.extension
-            val extensionScore = imageFileExtensionScores[extension.lowercase()] ?: return@mapNotNull null
-            val nameScore = when {
-                name.equals(trackName, true) -> 999
-                name.equals(directoryName, true) -> 998
-                else -> imageFileNameScores[name.lowercase()] ?: return@mapNotNull null
-            }
+            val extensionScore =
+                imageFileExtensionScores[extension.lowercase()] ?: return@mapNotNull null
+            val nameScore =
+                when {
+                    name.equals(trackName, true) -> 999
+                    name.equals(directoryName, true) -> 998
+                    else -> imageFileNameScores[name.lowercase()] ?: return@mapNotNull null
+                }
             file to (nameScore * 1000 + extensionScore)
         }
         .sortedByDescending { it.second }
-        .firstOrNull()?.first
+        .firstOrNull()
+        ?.first
 }
 
 fun loadArtwork(
@@ -252,7 +257,12 @@ private fun loadWithLibrary(
             } else {
                 AudioFileIO.read(File(path)).tag.firstArtwork.binaryData
             }
-        decodeBitmap(data.let(ByteBuffer::wrap).let(ImageDecoder::createSource), sizeLimit, crop, allowHardware)
+        decodeBitmap(
+            data.let(ByteBuffer::wrap).let(ImageDecoder::createSource),
+            sizeLimit,
+            crop,
+            allowHardware,
+        )
     } catch (_: Exception) {
         null
     }
@@ -326,11 +336,10 @@ private fun decodeBitmap(
     allowHardware: Boolean = true,
 ): Bitmap? {
     return try {
-        ImageDecoder.decodeBitmap(source) { decoder, info, source ->
-            decoder.setAllocator(
+        ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
+            decoder.allocator =
                 if (allowHardware) ImageDecoder.ALLOCATOR_DEFAULT
                 else ImageDecoder.ALLOCATOR_SOFTWARE
-            )
 
             val resizeFactor =
                 sizeLimit?.toFloat()?.div(max(info.size.width, info.size.height))?.takeIf {

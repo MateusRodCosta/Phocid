@@ -155,7 +155,7 @@ class MainViewModel(private val application: Application) : AndroidViewModel(app
                         _libraryScanState.update { null }
                     }
                 } else {
-                    scanMutex.withLock { }
+                    scanMutex.withLock {}
                 }
             }
         }

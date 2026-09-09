@@ -71,9 +71,7 @@ import kotlinx.coroutines.runBlocking
 class WidgetConfigureActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
-        runBlocking {
-            GlobalData.initialized.await()
-        }
+        runBlocking { GlobalData.initialized.await() }
 
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
@@ -213,7 +211,7 @@ class WidgetConfigureActivity : ComponentActivity() {
                                         Modifier.padding(
                                             start = 24.dp,
                                             end = 24.dp,
-                                            bottom = 16.dp
+                                            bottom = 16.dp,
                                         ),
                                 )
 

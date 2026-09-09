@@ -4,11 +4,11 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import com.mateusrodcosta.apps.lontramusic.utils.decodeWithCharsetName
 import com.mateusrodcosta.apps.lontramusic.utils.trimAndNormalize
+import kotlin.text.get
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
-import kotlin.text.get
 
 @Immutable
 data class Lyrics(val lines: List<Pair<Duration, String>>) {

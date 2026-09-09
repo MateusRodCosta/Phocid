@@ -98,21 +98,20 @@ class UiManager(
         MutableStateFlow(emptyList<LibraryScreenCollectionViewState>())
     val libraryScreenCollectionViewStack = _libraryScreenCollectionViewStack.asStateFlow()
 
-    val libraryScreenCollectionViewPurgeJob =
-        coroutineScope.launch {
-            _libraryScreenCollectionViewStack
-                .flatMapLatest { stack ->
-                    val last = stack.lastOrNull()
-                    last?.info?.map { if (it == null) last else null } ?: MutableStateFlow(null)
-                }
-                .onEach { purgeTarget ->
-                    if (purgeTarget != null)
-                        _libraryScreenCollectionViewStack.update { stack ->
-                            stack.filter { it !== purgeTarget }
-                        }
-                }
-                .collect()
-        }
+    val libraryScreenCollectionViewPurgeJob = coroutineScope.launch {
+        _libraryScreenCollectionViewStack
+            .flatMapLatest { stack ->
+                val last = stack.lastOrNull()
+                last?.info?.map { if (it == null) last else null } ?: MutableStateFlow(null)
+            }
+            .onEach { purgeTarget ->
+                if (purgeTarget != null)
+                    _libraryScreenCollectionViewStack.update { stack ->
+                        stack.filter { it !== purgeTarget }
+                    }
+            }
+            .collect()
+    }
 
     val playerScreenDragState = BinaryDragState({ Constants.DEFAULT_SWIPE_THRESHOLD })
 
@@ -180,28 +179,31 @@ class UiManager(
         SaveManager(
             context,
             coroutineScope,
-            kotlinx.coroutines.flow.combine(
-                snapshotFlow { libraryScreenHomeViewState.pagerState.currentPage },
-                playerScreenUseLyricsView,
-                playerScreenUseCountdown,
-                playerTimerSettings,
-                playlistIoSyncHelpShown,
-            ) { page, lyricsView, countdown, timerSettings, syncHelpShown ->
-                PersistentUiState(
-                    page,
-                    lyricsView,
-                    countdown,
-                    timerSettings,
-                    syncHelpShown,
-                )
-            }.distinctUntilChanged(),
+            kotlinx.coroutines.flow
+                .combine(
+                    snapshotFlow { libraryScreenHomeViewState.pagerState.currentPage },
+                    playerScreenUseLyricsView,
+                    playerScreenUseCountdown,
+                    playerTimerSettings,
+                    playlistIoSyncHelpShown,
+                ) { page, lyricsView, countdown, timerSettings, syncHelpShown ->
+                    PersistentUiState(
+                        page,
+                        lyricsView,
+                        countdown,
+                        timerSettings,
+                        syncHelpShown,
+                    )
+                }
+                .distinctUntilChanged(),
             Constants.UI_STATE_FILE_NAME,
             false,
         )
 
     init {
         val persistentState =
-            loadCbor<PersistentUiState>(context, Constants.UI_STATE_FILE_NAME, false) ?: PersistentUiState()
+            loadCbor<PersistentUiState>(context, Constants.UI_STATE_FILE_NAME, false)
+                ?: PersistentUiState()
         coroutineScope.launch {
             libraryScreenHomeViewState.pagerState.scrollToPage(
                 persistentState.libraryScreenHomeViewPage

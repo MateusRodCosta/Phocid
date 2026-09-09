@@ -114,7 +114,8 @@ class DeletePlaylistDialog(private val keys: Set<UUID>) : Dialog() {
     @Composable
     override fun Compose(viewModel: MainViewModel) {
         val singlePlaylistName = rememberSaveable {
-            viewModel.playlistManager.playlists.value[keys.first()]?.displayName ?: Constants.UNKNOWN
+            viewModel.playlistManager.playlists.value[keys.first()]?.displayName
+                ?: Constants.UNKNOWN
         }
         DialogBase(
             title =
@@ -192,7 +193,8 @@ class AddToPlaylistDialog(private val tracks: List<Track> = emptyList()) : Dialo
                 }
                 items(
                     sortedPlaylists,
-                    key = { (key, _, _) -> key.toString() }) { (key, name, alreadyContainsTrack) ->
+                    key = { (key, _, _) -> key.toString() },
+                ) { (key, name, alreadyContainsTrack) ->
                     UtilityCheckBoxListItem(
                         text = name,
                         checked = selectedPlaylists.contains(key.toString()),

@@ -177,22 +177,21 @@ class LibraryScreenHomeViewState(
     private val _activeMultiSelectState =
         MutableStateFlow(null as MultiSelectState<LibraryScreenHomeViewItem>?)
     val activeMultiSelectState = _activeMultiSelectState.asStateFlow()
-    private val activeMultiSelectStateJobs =
-        tabStates.map { (tabType, tabState) ->
-            coroutineScope.launch {
-                tabState.multiSelectState.items
-                    .onEach { items ->
-                        if (items.selection.isNotEmpty()) {
-                            tabStates
-                                .filterKeys { it != tabType }
-                                .values
-                                .forEach { it.multiSelectState.clearSelection() }
-                            _activeMultiSelectState.update { tabState.multiSelectState }
-                        }
+    private val activeMultiSelectStateJobs = tabStates.map { (tabType, tabState) ->
+        coroutineScope.launch {
+            tabState.multiSelectState.items
+                .onEach { items ->
+                    if (items.selection.isNotEmpty()) {
+                        tabStates
+                            .filterKeys { it != tabType }
+                            .values
+                            .forEach { it.multiSelectState.clearSelection() }
+                        _activeMultiSelectState.update { tabState.multiSelectState }
                     }
-                    .collect()
-            }
+                }
+                .collect()
         }
+    }
 
     override fun close() {
         activeMultiSelectStateJobs.forEach { it.cancel() }
@@ -421,74 +420,72 @@ class LibraryScreenHomeViewState(
                 .search(searchQuery, preferences.searchCollator)
                 .sorted(preferences.sortCollator, tab.sortingKeys, tab.sortAscending)
                 .hint(preferences.sortCollator, tab.sortingKeys)
-        val folderItems =
-            filteredChildFolders.map { (folder, hint) ->
-                folder to
-                    LibraryScreenHomeViewItem(
-                        key = folder.path,
-                        title = folder.fileName,
-                        subtitle = folder.displayStatistics,
-                        scrollHint = hint,
-                        artwork = Artwork.Icon(Icons.Outlined.Folder, folder.path.hashColor()),
-                        tracks = { folder.childTracksRecursive(libraryIndex.folders) },
-                        menuItems = {
-                            collectionMenuItems(
-                                { folder.childTracksRecursive(libraryIndex.folders) },
-                                it.playerManager,
-                                it.uiManager,
-                            )
-                        },
-                        multiSelectMenuItems = { others, viewModel, continuation ->
-                            collectionMenuItems(
-                                {
-                                    folder.childTracksRecursive(libraryIndex.folders) +
-                                        others.flatMap { it.tracks() }
-                                },
-                                viewModel.playerManager,
-                                viewModel.uiManager,
-                                continuation,
-                            )
-                        },
-                    ) { viewModel, _ ->
-                        viewModel.uiManager.openFolderCollectionView(folder.path)
-                    }
-            }
-        val trackItems =
-            filteredSortedChildTracks.mapIndexed { index, (track, hint) ->
-                track to
-                    LibraryScreenHomeViewItem(
-                        key = track.id,
-                        title = track.fileName,
-                        subtitle = track.duration.format(),
-                        scrollHint = hint,
-                        artwork = Artwork.Track(track),
-                        tracks = { listOf(track) },
-                        menuItems = {
-                            trackMenuItemsLibrary(
-                                track,
-                                { filteredSortedChildTracks.map { it.first } to index },
-                                it.playerManager,
-                                it.uiManager,
-                            )
-                        },
-                        multiSelectMenuItems = { others, viewModel, continuation ->
-                            collectionMenuItems(
-                                { listOf(track) + others.flatMap { it.tracks() } },
-                                viewModel.playerManager,
-                                viewModel.uiManager,
-                                continuation,
-                            )
-                        },
-                    ) { viewModel, onOpenMenu ->
-                        viewModel.preferences.value.libraryTrackClickAction.invokeOrOpenMenu(
-                            filteredSortedChildTracks.map { it.first },
-                            index,
+        val folderItems = filteredChildFolders.map { (folder, hint) ->
+            folder to
+                LibraryScreenHomeViewItem(
+                    key = folder.path,
+                    title = folder.fileName,
+                    subtitle = folder.displayStatistics,
+                    scrollHint = hint,
+                    artwork = Artwork.Icon(Icons.Outlined.Folder, folder.path.hashColor()),
+                    tracks = { folder.childTracksRecursive(libraryIndex.folders) },
+                    menuItems = {
+                        collectionMenuItems(
+                            { folder.childTracksRecursive(libraryIndex.folders) },
+                            it.playerManager,
+                            it.uiManager,
+                        )
+                    },
+                    multiSelectMenuItems = { others, viewModel, continuation ->
+                        collectionMenuItems(
+                            {
+                                folder.childTracksRecursive(libraryIndex.folders) +
+                                    others.flatMap { it.tracks() }
+                            },
                             viewModel.playerManager,
                             viewModel.uiManager,
-                            onOpenMenu,
+                            continuation,
                         )
-                    }
-            }
+                    },
+                ) { viewModel, _ ->
+                    viewModel.uiManager.openFolderCollectionView(folder.path)
+                }
+        }
+        val trackItems = filteredSortedChildTracks.mapIndexed { index, (track, hint) ->
+            track to
+                LibraryScreenHomeViewItem(
+                    key = track.id,
+                    title = track.fileName,
+                    subtitle = track.duration.format(),
+                    scrollHint = hint,
+                    artwork = Artwork.Track(track),
+                    tracks = { listOf(track) },
+                    menuItems = {
+                        trackMenuItemsLibrary(
+                            track,
+                            { filteredSortedChildTracks.map { it.first } to index },
+                            it.playerManager,
+                            it.uiManager,
+                        )
+                    },
+                    multiSelectMenuItems = { others, viewModel, continuation ->
+                        collectionMenuItems(
+                            { listOf(track) + others.flatMap { it.tracks() } },
+                            viewModel.playerManager,
+                            viewModel.uiManager,
+                            continuation,
+                        )
+                    },
+                ) { viewModel, onOpenMenu ->
+                    viewModel.preferences.value.libraryTrackClickAction.invokeOrOpenMenu(
+                        filteredSortedChildTracks.map { it.first },
+                        index,
+                        viewModel.playerManager,
+                        viewModel.uiManager,
+                        onOpenMenu,
+                    )
+                }
+        }
         return (folderItems + trackItems)
             .sortedBy(preferences.sortCollator, tab.sortingKeys, tab.sortAscending) { it.first }
             .map { it.second }
@@ -722,13 +719,13 @@ private fun LibraryList(
                             actions = { OverflowMenu(menuItems(viewModel), state = menuState) },
                             modifier =
                                 Modifier.multiSelectClickable(
-                                    items,
-                                    index,
-                                    multiSelectManager,
-                                    haptics,
-                                ) {
-                                    info.onClick(viewModel) { menuState.value = true }
-                                }
+                                        items,
+                                        index,
+                                        multiSelectManager,
+                                        haptics,
+                                    ) {
+                                        info.onClick(viewModel) { menuState.value = true }
+                                    }
                                     .animateItem(fadeInSpec = null, fadeOutSpec = null),
                             selected = selected,
                         )

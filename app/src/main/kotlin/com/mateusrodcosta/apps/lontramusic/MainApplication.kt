@@ -37,7 +37,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-
 import okio.Path.Companion.toOkioPath
 
 class MainApplication : Application(), SingletonImageLoader.Factory {
@@ -56,11 +55,7 @@ class MainApplication : Application(), SingletonImageLoader.Factory {
                 add(TrackFetcher.Factory())
                 add(TrackKeyer())
             }
-            .memoryCache {
-                MemoryCache.Builder()
-                    .maxSizePercent(context, percent)
-                    .build()
-            }
+            .memoryCache { MemoryCache.Builder().maxSizePercent(context, percent).build() }
             .diskCache {
                 DiskCache.Builder()
                     .directory(cacheDir.resolve("image_cache").toOkioPath())
@@ -86,13 +81,18 @@ class MainApplication : Application(), SingletonImageLoader.Factory {
     override fun onCreate() {
         super.onCreate()
 
-        val exitInfos = getSystemService(ActivityManager::class.java)
-            ?.getHistoricalProcessExitReasons(packageName, 0, 1)
+        val exitInfos =
+            getSystemService(ActivityManager::class.java)
+                ?.getHistoricalProcessExitReasons(packageName, 0, 1)
         exitInfos?.firstOrNull()?.let { info ->
-            if (info.reason == ApplicationExitInfo.REASON_OTHER &&
-                info.description?.contains("MemoryLimiter:AnonSwap") == true
+            if (
+                info.reason == ApplicationExitInfo.REASON_OTHER &&
+                    info.description?.contains("MemoryLimiter:AnonSwap") == true
             ) {
-                Log.w("LontraMusic", "Previous exit triggered by Android 17 MemoryLimiter:AnonSwap: ${info.description}")
+                Log.w(
+                    "LontraMusic",
+                    "Previous exit triggered by Android 17 MemoryLimiter:AnonSwap: ${info.description}",
+                )
             }
         }
 
@@ -110,18 +110,25 @@ class MainApplication : Application(), SingletonImageLoader.Factory {
             ioScope.launch {
                 preferences =
                     MutableStateFlow(
-                        loadCbor<Preferences>(context, Constants.PREFERENCES_FILE_NAME, false)?.upgrade()
-                            ?: Preferences()
+                        loadCbor<Preferences>(context, Constants.PREFERENCES_FILE_NAME, false)
+                            ?.upgrade() ?: Preferences()
                     )
                 unfilteredTrackIndex =
                     MutableStateFlow(
-                        loadCbor<UnfilteredTrackIndex>(context, Constants.TRACK_INDEX_FILE_NAME, false)
+                        loadCbor<UnfilteredTrackIndex>(
+                                context,
+                                Constants.TRACK_INDEX_FILE_NAME,
+                                false,
+                            )
                             ?.upgrade() ?: UnfilteredTrackIndex(null, emptyMap())
                     )
                 playerState =
                     MutableStateFlow(
-                        loadCbor<PlayerState>(context, Constants.PLAYER_STATE_FILE_NAME, isCache = false)
-                            ?: PlayerState()
+                        loadCbor<PlayerState>(
+                            context,
+                            Constants.PLAYER_STATE_FILE_NAME,
+                            isCache = false,
+                        ) ?: PlayerState()
                     )
 
                 // LibraryIndex() is expensive, so extracting only the relevant
@@ -144,20 +151,33 @@ class MainApplication : Application(), SingletonImageLoader.Factory {
                 playlistManager.initialize()
 
                 saveManagers +=
-                        SaveManager(context, ioScope, preferences, Constants.PREFERENCES_FILE_NAME, false)
+                    SaveManager(
+                        context,
+                        ioScope,
+                        preferences,
+                        Constants.PREFERENCES_FILE_NAME,
+                        false,
+                    )
                 saveManagers +=
-                        SaveManager(
-                            context,
-                            ioScope,
-                            unfilteredTrackIndex,
-                            Constants.TRACK_INDEX_FILE_NAME,
-                            false,
-                        )
+                    SaveManager(
+                        context,
+                        ioScope,
+                        unfilteredTrackIndex,
+                        Constants.TRACK_INDEX_FILE_NAME,
+                        false,
+                    )
                 saveManagers +=
-                        SaveManager(context, ioScope, playerState, Constants.PLAYER_STATE_FILE_NAME, false)
+                    SaveManager(
+                        context,
+                        ioScope,
+                        playerState,
+                        Constants.PLAYER_STATE_FILE_NAME,
+                        false,
+                    )
 
                 defaultScope.launch {
-                    playerState.combine(defaultScope, libraryIndex) { state, _ -> state }
+                    playerState
+                        .combine(defaultScope, libraryIndex) { state, _ -> state }
                         .onEach { MainAppWidget().updateAll(context) }
                         .collect()
                 }

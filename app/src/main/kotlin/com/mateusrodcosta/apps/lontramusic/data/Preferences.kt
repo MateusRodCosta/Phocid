@@ -148,24 +148,22 @@ data class Preferences(
     }
 
     @Transient
-    val blacklistRegexes =
-        blacklist.mapNotNull {
-            try {
-                Regex(it, RegexOption.IGNORE_CASE)
-            } catch (_: Exception) {
-                null
-            }
+    val blacklistRegexes = blacklist.mapNotNull {
+        try {
+            Regex(it, RegexOption.IGNORE_CASE)
+        } catch (_: Exception) {
+            null
         }
+    }
 
     @Transient
-    val whitelistRegexes =
-        whitelist.mapNotNull {
-            try {
-                Regex(it, RegexOption.IGNORE_CASE)
-            } catch (_: Exception) {
-                null
-            }
+    val whitelistRegexes = whitelist.mapNotNull {
+        try {
+            Regex(it, RegexOption.IGNORE_CASE)
+        } catch (_: Exception) {
+            null
         }
+    }
 
     @Transient
     val tabs =

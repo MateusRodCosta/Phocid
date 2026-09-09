@@ -209,7 +209,9 @@ inline fun <reified T> TrackCarousel(
                         horizontalDragTotal += dragAmount
                         isLastAdjacent = true
                         dragJob?.cancel()
-                        dragJob = coroutineScope.launch { offset.snapTo(horizontalDragTotal / size.width) }
+                        dragJob = coroutineScope.launch {
+                            offset.snapTo(horizontalDragTotal / size.width)
+                        }
                     }
                 }
     ) {

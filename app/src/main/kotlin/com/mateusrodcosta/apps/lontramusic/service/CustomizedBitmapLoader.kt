@@ -25,7 +25,8 @@ import kotlinx.coroutines.runBlocking
 
 @UnstableApi
 class CustomizedBitmapLoader(private val context: Context) : BitmapLoader {
-    private val listeningExecutorService = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor())
+    private val listeningExecutorService =
+        MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor())
     private val imageLoader = SingletonImageLoader.get(context)
 
     override fun supportsMimeType(mimeType: String): Boolean = true
@@ -33,12 +34,14 @@ class CustomizedBitmapLoader(private val context: Context) : BitmapLoader {
     override fun decodeBitmap(data: ByteArray): ListenableFuture<Bitmap> {
         return listeningExecutorService.submit<Bitmap> {
             runBlocking {
-                val request = ImageRequest.Builder(context)
-                    .data(data)
-                    .size(512, 512)
-                    .allowHardware(false)
-                    .build()
-                imageLoader.execute(request).image?.toBitmap() ?: throw Exception("Failed to decode bitmap")
+                val request =
+                    ImageRequest.Builder(context)
+                        .data(data)
+                        .size(512, 512)
+                        .allowHardware(false)
+                        .build()
+                imageLoader.execute(request).image?.toBitmap()
+                    ?: throw Exception("Failed to decode bitmap")
             }
         }
     }
@@ -46,12 +49,14 @@ class CustomizedBitmapLoader(private val context: Context) : BitmapLoader {
     override fun loadBitmap(uri: Uri): ListenableFuture<Bitmap> {
         return listeningExecutorService.submit<Bitmap> {
             runBlocking {
-                val request = ImageRequest.Builder(context)
-                    .data(uri)
-                    .size(512, 512)
-                    .allowHardware(false)
-                    .build()
-                imageLoader.execute(request).image?.toBitmap() ?: throw Exception("Failed to load bitmap from uri: $uri")
+                val request =
+                    ImageRequest.Builder(context)
+                        .data(uri)
+                        .size(512, 512)
+                        .allowHardware(false)
+                        .build()
+                imageLoader.execute(request).image?.toBitmap()
+                    ?: throw Exception("Failed to load bitmap from uri: $uri")
             }
         }
     }
@@ -62,46 +67,55 @@ class CustomizedBitmapLoader(private val context: Context) : BitmapLoader {
 
         return listeningExecutorService.submit<Bitmap> {
             runBlocking {
-                val id = try { ContentUris.parseId(uri) } catch (_: Exception) { -1L }
+                val id =
+                    try {
+                        ContentUris.parseId(uri)
+                    } catch (_: Exception) {
+                        -1L
+                    }
                 val track = if (id != -1L) GlobalData.libraryIndex.value.tracks[id] else null
 
-                val model: Any = if (track != null && track.hasArtwork) {
-                    ArtworkModel(
-                        type = track.artworkType,
-                        source = track.artworkSourcePath,
-                        hash = track.artworkHash,
-                        id = track.id,
-                        path = track.path
-                    )
-                } else if (path != null) {
-                    // Fallback discovery if index is not ready
-                    val resolved = resolveArtworkSource(path, uri)
-                    if (resolved != null) {
+                val model: Any =
+                    if (track != null && track.hasArtwork) {
                         ArtworkModel(
-                            type = when (resolved.type) {
-                                ArtworkSourceType.EMBEDDED -> ArtworkType.EMBEDDED
-                                ArtworkSourceType.EXTERNAL -> ArtworkType.EXTERNAL
-                                ArtworkSourceType.MEDIA_STORE -> ArtworkType.MEDIA_STORE
-                            },
-                            source = resolved.source,
-                            hash = null,
-                            id = id,
-                            path = path
+                            type = track.artworkType,
+                            source = track.artworkSourcePath,
+                            hash = track.artworkHash,
+                            id = track.id,
+                            path = track.path,
                         )
+                    } else if (path != null) {
+                        // Fallback discovery if index is not ready
+                        val resolved = resolveArtworkSource(path, uri)
+                        if (resolved != null) {
+                            ArtworkModel(
+                                type =
+                                    when (resolved.type) {
+                                        ArtworkSourceType.EMBEDDED -> ArtworkType.EMBEDDED
+                                        ArtworkSourceType.EXTERNAL -> ArtworkType.EXTERNAL
+                                        ArtworkSourceType.MEDIA_STORE -> ArtworkType.MEDIA_STORE
+                                    },
+                                source = resolved.source,
+                                hash = null,
+                                id = id,
+                                path = path,
+                            )
+                        } else {
+                            uri
+                        }
                     } else {
                         uri
                     }
-                } else {
-                    uri
-                }
 
-                val request = ImageRequest.Builder(context)
-                    .data(model)
-                    .size(512, 512)
-                    .allowHardware(false)
-                    .build()
-                
-                imageLoader.execute(request).image?.toBitmap() ?: throw Exception("No artwork found")
+                val request =
+                    ImageRequest.Builder(context)
+                        .data(model)
+                        .size(512, 512)
+                        .allowHardware(false)
+                        .build()
+
+                imageLoader.execute(request).image?.toBitmap()
+                    ?: throw Exception("No artwork found")
             }
         }
     }

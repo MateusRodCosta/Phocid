@@ -75,9 +75,7 @@ class PlaybackService : MediaLibraryService() {
 
     override fun onCreate() {
         super.onCreate()
-        runBlocking {
-            GlobalData.initialized.await()
-        }
+        runBlocking { GlobalData.initialized.await() }
 
         val player = CustomizedPlayer(this)
 
@@ -130,7 +128,11 @@ class PlaybackService : MediaLibraryService() {
                     )
                 )
                 .setBitmapLoader(CustomizedBitmapLoader(this))
-                .setSessionExtras(Bundle().apply { putInt(Constants.AUDIO_SESSION_ID_KEY, player.inner.audioSessionId) })
+                .setSessionExtras(
+                    Bundle().apply {
+                        putInt(Constants.AUDIO_SESSION_ID_KEY, player.inner.audioSessionId)
+                    }
+                )
                 .setMediaButtonPreferences(commandButtons(player))
                 .build()
 
@@ -188,7 +190,9 @@ class PlaybackService : MediaLibraryService() {
                             ) {
                                 player.pause()
                                 timerTarget = -1
-                                mediaSession?.updateSessionExtras { putLong(Constants.TIMER_TARGET_KEY, -1) }
+                                mediaSession?.updateSessionExtras {
+                                    putLong(Constants.TIMER_TARGET_KEY, -1)
+                                }
                                 timerJob?.cancel()
                                 timerJob = null
                             }
@@ -266,11 +270,11 @@ class PlaybackService : MediaLibraryService() {
             ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
                 return Futures.immediateFuture(
                     getChildMediaItems(
-                        GlobalData.preferences.value,
-                        GlobalData.libraryIndex.value,
-                        GlobalData.playlistManager.playlists.value,
-                        parentId,
-                    )
+                            GlobalData.preferences.value,
+                            GlobalData.libraryIndex.value,
+                            GlobalData.playlistManager.playlists.value,
+                            parentId,
+                        )
                         ?.let {
                             LibraryResult.ofItemList(
                                 it.drop(pageSize * page).take(pageSize),
@@ -440,7 +444,9 @@ class PlaybackService : MediaLibraryService() {
                 player,
                 GlobalData.libraryIndex.value.tracks[
                         player.currentMediaItem?.mediaId?.toLongOrNull()]
-                    ?.let { track -> GlobalData.playlistManager.playlists.value.isFavorite(track) } == true,
+                    ?.let { track ->
+                        GlobalData.playlistManager.playlists.value.isFavorite(track)
+                    } == true,
             )
         }
     }
@@ -456,7 +462,9 @@ class PlaybackService : MediaLibraryService() {
                     ) {
                         player.pause()
                         timerTarget = -1
-                        mediaSession?.updateSessionExtras { putLong(Constants.TIMER_TARGET_KEY, -1) }
+                        mediaSession?.updateSessionExtras {
+                            putLong(Constants.TIMER_TARGET_KEY, -1)
+                        }
                         timerJob?.cancel()
                         timerJob = null
                     } else if (timerTarget < 0) {
@@ -514,9 +522,8 @@ class PlaybackService : MediaLibraryService() {
         @Suppress("unused") session: MediaSession,
         @Suppress("unused") args: Bundle,
     ) {
-        GlobalData.libraryIndex.value.tracks[player.currentMediaItem?.mediaId?.toLongOrNull()]?.let {
-            GlobalData.playlistManager.toggleFavorite(it)
-        }
+        GlobalData.libraryIndex.value.tracks[player.currentMediaItem?.mediaId?.toLongOrNull()]
+            ?.let { GlobalData.playlistManager.toggleFavorite(it) }
     }
 
     // endregion

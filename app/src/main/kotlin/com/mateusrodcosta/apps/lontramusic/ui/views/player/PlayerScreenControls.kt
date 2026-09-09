@@ -99,14 +99,14 @@ val PlayerScreenControlsDefault =
         verticalArrangement = Arrangement.Top,
         currentTrackInfoFirst = false,
         currentTrackInfo = {
-                currentTrack: Track,
-                currentTrackIsFavorite: Boolean,
-                containerColor: Color,
-                contentColor: Color,
-                colorfulBackground: Boolean,
-                overflowMenuItems: List<MenuItem>,
-                onTogglePlayQueue: () -> Unit,
-                onToggleCurrentTrackIsFavorite: () -> Unit ->
+            currentTrack: Track,
+            currentTrackIsFavorite: Boolean,
+            containerColor: Color,
+            contentColor: Color,
+            colorfulBackground: Boolean,
+            overflowMenuItems: List<MenuItem>,
+            onTogglePlayQueue: () -> Unit,
+            onToggleCurrentTrackIsFavorite: () -> Unit ->
             Surface(
                 color =
                     if (colorfulBackground) containerColor.darken()
@@ -149,14 +149,14 @@ val PlayerScreenControlsNoQueue =
         verticalArrangement = Arrangement.SpaceEvenly,
         currentTrackInfoFirst = true,
         currentTrackInfo = {
-                currentTrack: Track,
-                currentTrackIsFavorite: Boolean,
-                containerColor: Color,
-                contentColor: Color,
-                colorfulBackground: Boolean,
-                overflowMenuItems: List<MenuItem>,
-                onTogglePlayQueue: () -> Unit,
-                onToggleCurrentTrackIsFavorite: () -> Unit ->
+            currentTrack: Track,
+            currentTrackIsFavorite: Boolean,
+            containerColor: Color,
+            contentColor: Color,
+            colorfulBackground: Boolean,
+            overflowMenuItems: List<MenuItem>,
+            onTogglePlayQueue: () -> Unit,
+            onToggleCurrentTrackIsFavorite: () -> Unit ->
             Surface(
                 color = containerColor,
                 contentColor = contentColor,
@@ -304,7 +304,10 @@ class PlayerScreenControlsDefaultBase(
                         ) {
                             SingleLineText(
                                 progressSeconds.seconds.format(),
-                                style = Typography.labelMedium.copy(fontFeatureSettings = Constants.TNUM),
+                                style =
+                                    Typography.labelMedium.copy(
+                                        fontFeatureSettings = Constants.TNUM
+                                    ),
                                 textAlign = TextAlign.Center,
                                 modifier =
                                     Modifier.defaultMinSize(
@@ -330,12 +333,15 @@ class PlayerScreenControlsDefaultBase(
                                         if (useCountdown) -(it - progressSeconds.seconds) else it
                                     }
                                     .format(),
-                                style = Typography.labelMedium.copy(fontFeatureSettings = Constants.TNUM),
+                                style =
+                                    Typography.labelMedium.copy(
+                                        fontFeatureSettings = Constants.TNUM
+                                    ),
                                 textAlign = TextAlign.Center,
                                 modifier =
                                     Modifier.defaultMinSize(
-                                        minWidth = 36.dp * LocalDensity.current.fontScale
-                                    )
+                                            minWidth = 36.dp * LocalDensity.current.fontScale
+                                        )
                                         .clickable(
                                             interactionSource =
                                                 remember { MutableInteractionSource() },

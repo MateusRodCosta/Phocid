@@ -1423,7 +1423,8 @@ suspend fun scanTracks(
     val processorCount = Runtime.getRuntime().availableProcessors().coerceAtLeast(1)
     val overheadFactor = 3.0
     // Cap estimated track size to 50MB so giant files don't collapse parallelism to 1
-    val effectiveTrackSize = maxSize.coerceAtMost(50L * 1024L * 1024L).coerceAtLeast(5L * 1024L * 1024L)
+    val effectiveTrackSize =
+        maxSize.coerceAtMost(50L * 1024L * 1024L).coerceAtLeast(5L * 1024L * 1024L)
     val parallelism =
         if (maxSize == 0L) 1
         else
@@ -1532,7 +1533,7 @@ private suspend fun scanTrack(
     var duration = crudeTrack.duration
     var format = crudeTrack.format
     var sampleRate = crudeTrack.sampleRate
-    var bitRate = crudeTrack.bitRate
+    val bitRate = crudeTrack.bitRate
     var bitDepth = crudeTrack.bitDepth
     var unsyncedLyrics = crudeTrack.unsyncedLyrics
     var comment = crudeTrack.comment
@@ -1686,63 +1687,69 @@ private suspend fun scanTrack(
     albumArtists = splitArtists(null, albumArtists, artistSeparators, artistSeparatorExceptions)
     genres = splitGenres(genres, genreSeparators, genreSeparatorExceptions)
 
-    val artworkHash = scanCache.artworkHash.getOrPut(path) {
-        OptionalHash(getEmbeddedArtworkHash(path))
-    }.hash
+    val artworkHash =
+        scanCache.artworkHash.getOrPut(path) { OptionalHash(getEmbeddedArtworkHash(path)) }.hash
     val resolvedArtwork = resolveArtworkSource(path, crudeTrack.uri, scanCache)
 
-    val cacheKey = when (resolvedArtwork?.type) {
-        ArtworkSourceType.EMBEDDED -> artworkHash?.let { "hash_$it" }
-        ArtworkSourceType.EXTERNAL -> resolvedArtwork.source
-        else -> null
-    }
-
-    val (vibrantColor, mutedColor) = if (disableArtworkColorExtraction || resolvedArtwork == null) {
-        null to null
-    } else if (cacheKey != null && scanCache.palette.containsKey(cacheKey)) {
-        scanCache.palette[cacheKey]!!
-    } else {
-        try {
-            val model = ArtworkModel(
-                type = when (resolvedArtwork.type) {
-                    ArtworkSourceType.EMBEDDED -> ArtworkType.EMBEDDED
-                    ArtworkSourceType.EXTERNAL -> ArtworkType.EXTERNAL
-                    ArtworkSourceType.MEDIA_STORE -> ArtworkType.MEDIA_STORE
-                },
-                source = resolvedArtwork.source,
-                hash = artworkHash,
-                id = id,
-                path = path
-            )
-            val request = ImageRequest.Builder(context)
-                .data(model)
-                .size(64, 64)
-                .allowHardware(false)
-                .build()
-            val bitmap = SingletonImageLoader.get(context).execute(request).image?.toBitmap()
-            val softwareBitmap = if (bitmap?.config == Bitmap.Config.HARDWARE) {
-                bitmap.copy(Bitmap.Config.ARGB_8888, false)
-            } else bitmap
-            val palette = softwareBitmap
-                ?.let { Palette.from(it) }
-                ?.clearTargets()
-                ?.apply {
-                    addTarget(Target.VIBRANT)
-                    addTarget(Target.MUTED)
-                }
-                ?.generate()
-            val vibrant = palette?.getSwatchForTarget(Target.VIBRANT)?.rgb?.let { Color(it) }
-            val muted = palette?.getSwatchForTarget(Target.MUTED)?.rgb?.let { Color(it) }
-            val result = vibrant to muted
-            if (cacheKey != null) {
-                scanCache.palette[cacheKey] = result
-            }
-            result
-        } catch (ex: Exception) {
-            Log.e("LontraMusic", "Error extracting palette for $path", ex)
-            null to null
+    val cacheKey =
+        when (resolvedArtwork.type) {
+            ArtworkSourceType.EMBEDDED -> artworkHash?.let { "hash_$it" }
+            ArtworkSourceType.EXTERNAL -> resolvedArtwork.source
+            else -> null
         }
-    }
+
+    val (vibrantColor, mutedColor) =
+        if (disableArtworkColorExtraction) {
+            null to null
+        } else if (cacheKey != null && scanCache.palette.containsKey(cacheKey)) {
+            scanCache.palette[cacheKey]!!
+        } else {
+            try {
+                val model =
+                    ArtworkModel(
+                        type =
+                            when (resolvedArtwork.type) {
+                                ArtworkSourceType.EMBEDDED -> ArtworkType.EMBEDDED
+                                ArtworkSourceType.EXTERNAL -> ArtworkType.EXTERNAL
+                                ArtworkSourceType.MEDIA_STORE -> ArtworkType.MEDIA_STORE
+                            },
+                        source = resolvedArtwork.source,
+                        hash = artworkHash,
+                        id = id,
+                        path = path,
+                    )
+                val request =
+                    ImageRequest.Builder(context)
+                        .data(model)
+                        .size(64, 64)
+                        .allowHardware(false)
+                        .build()
+                val bitmap = SingletonImageLoader.get(context).execute(request).image?.toBitmap()
+                val softwareBitmap =
+                    if (bitmap?.config == Bitmap.Config.HARDWARE) {
+                        bitmap.copy(Bitmap.Config.ARGB_8888, false)
+                    } else bitmap
+                val palette =
+                    softwareBitmap
+                        ?.let { Palette.from(it) }
+                        ?.clearTargets()
+                        ?.apply {
+                            addTarget(Target.VIBRANT)
+                            addTarget(Target.MUTED)
+                        }
+                        ?.generate()
+                val vibrant = palette?.getSwatchForTarget(Target.VIBRANT)?.rgb?.let { Color(it) }
+                val muted = palette?.getSwatchForTarget(Target.MUTED)?.rgb?.let { Color(it) }
+                val result = vibrant to muted
+                if (cacheKey != null) {
+                    scanCache.palette[cacheKey] = result
+                }
+                result
+            } catch (ex: Exception) {
+                Log.e("LontraMusic", "Error extracting palette for $path", ex)
+                null to null
+            }
+        }
 
     return crudeTrack.copy(
         title = title,
@@ -1761,14 +1768,14 @@ private suspend fun scanTrack(
         bitDepth = bitDepth,
         unsyncedLyrics = unsyncedLyrics,
         comment = comment,
-        hasArtwork = resolvedArtwork != null,
-        artworkType = when (resolvedArtwork?.type) {
-            ArtworkSourceType.EMBEDDED -> ArtworkType.EMBEDDED
-            ArtworkSourceType.EXTERNAL -> ArtworkType.EXTERNAL
-            ArtworkSourceType.MEDIA_STORE -> ArtworkType.MEDIA_STORE
-            null -> ArtworkType.NONE
-        },
-        artworkSourcePath = resolvedArtwork?.source,
+        hasArtwork = true,
+        artworkType =
+            when (resolvedArtwork.type) {
+                ArtworkSourceType.EMBEDDED -> ArtworkType.EMBEDDED
+                ArtworkSourceType.EXTERNAL -> ArtworkType.EXTERNAL
+                ArtworkSourceType.MEDIA_STORE -> ArtworkType.MEDIA_STORE
+            },
+        artworkSourcePath = resolvedArtwork.source,
         vibrantColor = vibrantColor,
         mutedColor = mutedColor,
         artworkHash = artworkHash,

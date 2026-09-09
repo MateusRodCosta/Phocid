@@ -48,18 +48,19 @@ class PlayerManager(
         val sessionToken =
             SessionToken(context, ComponentName(context, PlaybackService::class.java))
         val controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
-        val controller = suspendCancellableCoroutine<MediaController> { continuation ->
-            controllerFuture.addListener(
-                {
-                    try {
-                        continuation.resume(controllerFuture.get())
-                    } catch (ex: Exception) {
-                        continuation.resumeWithException(ex)
-                    }
-                },
-                ContextCompat.getMainExecutor(context),
-            )
-        }
+        val controller =
+            suspendCancellableCoroutine<MediaController> { continuation ->
+                controllerFuture.addListener(
+                    {
+                        try {
+                            continuation.resume(controllerFuture.get())
+                        } catch (ex: Exception) {
+                            continuation.resumeWithException(ex)
+                        }
+                    },
+                    ContextCompat.getMainExecutor(context),
+                )
+            }
         mediaController = controller
         mediaController.prepare()
     }
@@ -172,18 +173,16 @@ class PlayerManager(
                         }
                     val currentIndex = mediaController.currentMediaItemIndex
                     val currentUnshuffledIndex = mediaItems[currentIndex].getUnshuffledIndex()!!
-                    val offsetOriginal =
-                        mediaItems.map {
-                            it.setUnshuffledIndex(
-                                it.getUnshuffledIndex()!!.let {
-                                    if (it > currentUnshuffledIndex) it + tracks.size else it
-                                }
-                            )
-                        }
-                    val new =
-                        tracks.mapIndexed { i, track ->
-                            track.getMediaItem(currentUnshuffledIndex + 1 + i)
-                        }
+                    val offsetOriginal = mediaItems.map {
+                        it.setUnshuffledIndex(
+                            it.getUnshuffledIndex()!!.let {
+                                if (it > currentUnshuffledIndex) it + tracks.size else it
+                            }
+                        )
+                    }
+                    val new = tracks.mapIndexed { i, track ->
+                        track.getMediaItem(currentUnshuffledIndex + 1 + i)
+                    }
                     mediaController.replaceMediaItems(
                         currentIndex + 1,
                         Int.MAX_VALUE,
@@ -242,7 +241,10 @@ class PlayerManager(
             ?.let {
                 Pair(
                     it,
-                    mediaController.sessionExtras.getBoolean(Constants.TIMER_FINISH_LAST_TRACK_KEY, true),
+                    mediaController.sessionExtras.getBoolean(
+                        Constants.TIMER_FINISH_LAST_TRACK_KEY,
+                        true,
+                    ),
                 )
             }
     }

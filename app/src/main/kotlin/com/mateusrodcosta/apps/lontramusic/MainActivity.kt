@@ -122,7 +122,10 @@ class MainActivity : ComponentActivity(), IntentLauncher {
                         },
                     )
                 permissionGranted =
-                    permissions.permissions.find { it.permission == Constants.READ_PERMISSION }?.status?.isGranted == true
+                    permissions.permissions
+                        .find { it.permission == Constants.READ_PERMISSION }
+                        ?.status
+                        ?.isGranted == true
 
                 val uiManager = viewModel.uiManager
                 val topLevelScreenStack by
@@ -141,20 +144,19 @@ class MainActivity : ComponentActivity(), IntentLauncher {
 
                 val preferences by viewModel.preferences.collectAsStateWithLifecycle()
 
-                val currentTrackColor by
-                    remember {
-                            viewModel.playerManager.state.combine(
-                                coroutineScope,
-                                viewModel.libraryIndex,
-                                viewModel.preferences,
-                            ) { state, library, preferences ->
-                                if (state.actualPlayQueue.isEmpty()) null
-                                else
-                                    library.tracks[state.actualPlayQueue[state.currentIndex]]
-                                        ?.getArtworkColor(preferences.artworkColorPreference)
-                            }
-                        }
-                        .collectAsStateWithLifecycle()
+                val currentTrackColor by remember {
+                    viewModel.playerManager.state.combine(
+                        coroutineScope,
+                        viewModel.libraryIndex,
+                        viewModel.preferences,
+                    ) { state, library, preferences ->
+                        if (state.actualPlayQueue.isEmpty()) null
+                        else
+                            library.tracks[state.actualPlayQueue[state.currentIndex]]
+                                ?.getArtworkColor(preferences.artworkColorPreference)
+                    }
+                }
+                    .collectAsStateWithLifecycle()
 
                 LaunchedEffect(coroutineScope) {
                     playerScreenDragState.coroutineScope = WeakReference(coroutineScope)
@@ -165,39 +167,45 @@ class MainActivity : ComponentActivity(), IntentLauncher {
                 LaunchedEffect(viewModel.playerManager.state, viewModel.libraryIndex) {
                     val context = this@MainActivity
                     val imageLoader = SingletonImageLoader.get(context)
-                    viewModel.playerManager.state.combine(
-                        this,
-                        viewModel.libraryIndex
-                    ) { state, library ->
-                        val queue = state.actualPlayQueue
-                        if (queue.isNotEmpty()) {
-                            val curr = state.currentIndex
-                            val repeat = state.repeat != Player.REPEAT_MODE_OFF
-                            val indicesToPrefetch = listOfNotNull(
-                                (curr - 2).wrap(queue.size, repeat),
-                                (curr - 1).wrap(queue.size, repeat),
-                                curr,
-                                (curr + 1).wrap(queue.size, repeat),
-                                (curr + 2).wrap(queue.size, repeat),
-                                (curr + 3).wrap(queue.size, repeat),
-                            )
-
-                            indicesToPrefetch.distinct().forEach { idx ->
-                                val trackId = queue.getOrNull(idx) ?: return@forEach
-                                val track = library.tracks[trackId] ?: return@forEach
-                                if (track.artworkType != ArtworkType.NONE) {
-                                    val model = ArtworkModel(
-                                        type = track.artworkType,
-                                        source = track.artworkSourcePath,
-                                        hash = track.artworkHash,
-                                        id = track.id,
-                                        path = track.path,
+                    viewModel.playerManager.state
+                        .combine(
+                            this,
+                            viewModel.libraryIndex,
+                        ) { state, library ->
+                            val queue = state.actualPlayQueue
+                            if (queue.isNotEmpty()) {
+                                val curr = state.currentIndex
+                                val repeat = state.repeat != Player.REPEAT_MODE_OFF
+                                val indicesToPrefetch =
+                                    listOfNotNull(
+                                        (curr - 2).wrap(queue.size, repeat),
+                                        (curr - 1).wrap(queue.size, repeat),
+                                        curr,
+                                        (curr + 1).wrap(queue.size, repeat),
+                                        (curr + 2).wrap(queue.size, repeat),
+                                        (curr + 3).wrap(queue.size, repeat),
                                     )
-                                    imageLoader.enqueue(ImageRequest.Builder(context).data(model).build())
+
+                                indicesToPrefetch.distinct().forEach { idx ->
+                                    val trackId = queue.getOrNull(idx) ?: return@forEach
+                                    val track = library.tracks[trackId] ?: return@forEach
+                                    if (track.artworkType != ArtworkType.NONE) {
+                                        val model =
+                                            ArtworkModel(
+                                                type = track.artworkType,
+                                                source = track.artworkSourcePath,
+                                                hash = track.artworkHash,
+                                                id = track.id,
+                                                path = track.path,
+                                            )
+                                        imageLoader.enqueue(
+                                            ImageRequest.Builder(context).data(model).build()
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }.collect()
+                        .collect()
                 }
 
                 LaunchedEffect(lifecycleState) {
@@ -254,8 +262,8 @@ class MainActivity : ComponentActivity(), IntentLauncher {
                                     LibraryScreen(
                                         playerScreenOpenDragLock,
                                         isObscured =
-                                            playerScreenDragState.position == 1f ||
-                                                    topLevelScreenStack.isNotEmpty(),
+                                            (playerScreenDragState.position == 1f) ||
+                                                topLevelScreenStack.isNotEmpty(),
                                     )
 
                                     if (playerScreenDragState.position > 0) {

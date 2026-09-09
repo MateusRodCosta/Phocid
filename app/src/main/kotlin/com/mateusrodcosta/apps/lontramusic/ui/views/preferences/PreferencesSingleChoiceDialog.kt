@@ -32,7 +32,7 @@ class PreferencesSingleChoiceDialog<T>(
                             viewModel.updatePreferences {
                                 updatePreferences(
                                     it,
-                                    option
+                                    option,
                                 )
                             }
                         },

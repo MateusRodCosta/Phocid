@@ -32,8 +32,8 @@ class Constants {
         const val FILE_PATH_KEY = "filePath"
 
         /**
-         * Used instead of [androidx.media3.common.MediaMetadata.artworkUri]; Setting the latter would break
-         * Android Auto
+         * Used instead of [androidx.media3.common.MediaMetadata.artworkUri]; Setting the latter
+         * would break Android Auto
          */
         const val URI_KEY = "bitmapUri"
         const val AUDIO_SESSION_ID_KEY = "audioSessionId"

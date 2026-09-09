@@ -179,7 +179,7 @@ class PlaybackService : MediaLibraryService() {
                         Player.EVENT_MEDIA_ITEM_TRANSITION,
                     )
                 ) {
-                    runBlocking {
+                    mainScope.launch {
                         timerMutex.withLock {
                             if (
                                 timerTarget >= 0 &&
@@ -471,7 +471,7 @@ class PlaybackService : MediaLibraryService() {
     }
 
     private fun onSetTimer(player: CustomizedPlayer, session: MediaSession, args: Bundle) {
-        runBlocking {
+        mainScope.launch {
             timerMutex.withLock {
                 val target = args.getLong(Constants.TIMER_TARGET_KEY, -1)
                 val finishLastTrack = args.getBoolean(Constants.TIMER_FINISH_LAST_TRACK_KEY, true)

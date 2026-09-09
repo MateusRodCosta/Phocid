@@ -88,6 +88,7 @@ import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
@@ -156,7 +157,7 @@ private constructor(tabType: PlaylistIoScreenTabType, initialExportSelection: Se
         LaunchedEffect(currentTabType) {
             if (
                 currentTabType == PlaylistIoScreenTabType.Sync &&
-                    !uiManager.playlistIoSyncHelpShown.getAndSet(true)
+                    !uiManager.playlistIoSyncHelpShown.getAndUpdate { true }
             ) {
                 uiManager.openDialog(PlaylistIoSyncHelpDialog())
             }

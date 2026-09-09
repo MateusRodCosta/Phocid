@@ -7,6 +7,7 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.unit.Dp
 import androidx.core.content.ContextCompat
 import com.mateusrodcosta.apps.lontramusic.data.LibraryIndex
@@ -31,24 +32,18 @@ import com.mateusrodcosta.apps.lontramusic.utils.map
 import java.lang.ref.WeakReference
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicLong
-import java.util.concurrent.atomic.AtomicReference
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 @Stable
@@ -143,9 +138,9 @@ class UiManager(
 
     val overrideStatusBarLightColor = MutableStateFlow(null as Boolean?)
 
-    val playerTimerSettings = AtomicReference(PlayerTimerSettings())
+    val playerTimerSettings = MutableStateFlow(PlayerTimerSettings())
 
-    val playlistIoSyncHelpShown = AtomicReference(false)
+    val playlistIoSyncHelpShown = MutableStateFlow(false)
 
     private val libraryScreenActiveMultiSelectState =
         _libraryScreenCollectionViewStack.combine(
@@ -185,21 +180,21 @@ class UiManager(
         SaveManager(
             context,
             coroutineScope,
-            flow {
-                while (currentCoroutineContext().isActive) {
-                    emit(
-                        PersistentUiState(
-                            libraryScreenHomeViewState.pagerState.currentPage,
-                            playerScreenUseLyricsView.value,
-                            playerScreenUseCountdown.value,
-                            playerTimerSettings.get(),
-                            playlistIoSyncHelpShown.get(),
-                        )
-                    )
-                    delay(1.seconds)
-                }
-            }
-                .distinctUntilChanged(),
+            kotlinx.coroutines.flow.combine(
+                snapshotFlow { libraryScreenHomeViewState.pagerState.currentPage },
+                playerScreenUseLyricsView,
+                playerScreenUseCountdown,
+                playerTimerSettings,
+                playlistIoSyncHelpShown,
+            ) { page, lyricsView, countdown, timerSettings, syncHelpShown ->
+                PersistentUiState(
+                    page,
+                    lyricsView,
+                    countdown,
+                    timerSettings,
+                    syncHelpShown,
+                )
+            }.distinctUntilChanged(),
             Constants.UI_STATE_FILE_NAME,
             false,
         )
@@ -214,8 +209,8 @@ class UiManager(
         }
         playerScreenUseLyricsView.update { persistentState.playerScreenUseLyricsView }
         playerScreenUseCountdown.update { persistentState.playerScreenUseCountdown }
-        playerTimerSettings.set(persistentState.playerTimerSettings)
-        playlistIoSyncHelpShown.set(persistentState.playlistIoSyncHelpShown)
+        playerTimerSettings.update { persistentState.playerTimerSettings }
+        playlistIoSyncHelpShown.update { persistentState.playlistIoSyncHelpShown }
     }
 
     override fun close() {

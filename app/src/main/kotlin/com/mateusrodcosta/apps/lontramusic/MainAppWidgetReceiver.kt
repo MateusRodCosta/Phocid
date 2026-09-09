@@ -76,7 +76,6 @@ import java.util.Locale
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 
 class MainAppWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget = MainAppWidget()
@@ -86,9 +85,7 @@ class MainAppWidget : GlanceAppWidget() {
     override val sizeMode = SizeMode.Exact
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        while (!GlobalData.initialized.get()) {
-            delay(1)
-        }
+        GlobalData.initialized.await()
         val coroutineScope = CoroutineScope(coroutineContext + Dispatchers.IO)
         val trackAndArtworkState =
             GlobalData.libraryIndex.combine(

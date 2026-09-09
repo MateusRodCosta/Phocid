@@ -17,13 +17,14 @@ import com.mateusrodcosta.apps.lontramusic.Constants
 import com.mateusrodcosta.apps.lontramusic.PlaybackService
 import com.mateusrodcosta.apps.lontramusic.utils.coerceInOrMin
 import com.mateusrodcosta.apps.lontramusic.utils.wrap
-import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 @Stable
 class PlayerManager(
@@ -47,19 +48,20 @@ class PlayerManager(
         val sessionToken =
             SessionToken(context, ComponentName(context, PlaybackService::class.java))
         val controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
-        val completed = AtomicBoolean(false)
-        controllerFuture.addListener(
-            {
-                mediaController = controllerFuture.get()
-                mediaController.prepare()
-                completed.set(true)
-            },
-            ContextCompat.getMainExecutor(context),
-        )
-
-        while (!completed.get()) {
-            delay(1)
+        val controller = suspendCancellableCoroutine<MediaController> { continuation ->
+            controllerFuture.addListener(
+                {
+                    try {
+                        continuation.resume(controllerFuture.get())
+                    } catch (ex: Exception) {
+                        continuation.resumeWithException(ex)
+                    }
+                },
+                ContextCompat.getMainExecutor(context),
+            )
         }
+        mediaController = controller
+        mediaController.prepare()
     }
 
     private fun updateTransientState() {

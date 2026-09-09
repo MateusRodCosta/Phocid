@@ -15,14 +15,17 @@ import com.mateusrodcosta.apps.lontramusic.globals.GlobalData
 import com.mateusrodcosta.apps.lontramusic.ui.views.library.LibraryScreenTabInfo
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.coroutines.resume
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 
@@ -62,9 +65,7 @@ class MainViewModel(private val application: Application) : AndroidViewModel(app
     fun initialize() {
         if (!initializationStarted.getAndSet(true)) {
             viewModelScope.launch {
-                while (!GlobalData.initialized.get()) {
-                    delay(1)
-                }
+                GlobalData.initialized.await()
                 playerManager =
                     PlayerManager(GlobalData.playerState, GlobalData.playerTransientState)
                 uiManager =
@@ -97,7 +98,6 @@ class MainViewModel(private val application: Application) : AndroidViewModel(app
                         _libraryScanState.update { force }
 
                         if (force || preferences.value.alwaysRescanMediaStore) {
-                            val mediaScannerSignal = AtomicBoolean(false)
                             // Try to obtain all external storage paths through hack.
                             // Result from getExternalStorageDirectory() is still kept in case the
                             // hack no longer works.
@@ -110,15 +110,16 @@ class MainViewModel(private val application: Application) : AndroidViewModel(app
                                     .plus(Environment.getExternalStorageDirectory().path)
                                     .distinct()
                                     .toTypedArray()
-                            MediaScannerConnection.scanFile(
-                                application.applicationContext,
-                                storages,
-                                arrayOf("audio/*"),
-                            ) { _, _ ->
-                                mediaScannerSignal.set(true)
-                            }
-                            while (!mediaScannerSignal.get()) {
-                                delay(1)
+                            suspendCancellableCoroutine<Unit> { continuation ->
+                                MediaScannerConnection.scanFile(
+                                    application.applicationContext,
+                                    storages,
+                                    arrayOf("audio/*"),
+                                ) { _, _ ->
+                                    if (continuation.isActive) {
+                                        continuation.resume(Unit)
+                                    }
+                                }
                             }
                         }
 
@@ -137,11 +138,8 @@ class MainViewModel(private val application: Application) : AndroidViewModel(app
                             }
                         if (newTrackIndex != null) {
                             GlobalData.unfilteredTrackIndex.update { newTrackIndex }
-                            while (
-                                GlobalData.libraryIndex.value.flowVersion <
-                                    newTrackIndex.flowVersion
-                            ) {
-                                delay(1)
+                            GlobalData.libraryIndex.first {
+                                it.flowVersion >= newTrackIndex.flowVersion
                             }
                             Log.d("LontraMusic", "Library scan completed")
                         } else {
@@ -153,9 +151,7 @@ class MainViewModel(private val application: Application) : AndroidViewModel(app
                         _libraryScanState.update { null }
                     }
                 } else {
-                    while (scanMutex.isLocked) {
-                        delay(1)
-                    }
+                    scanMutex.withLock { }
                 }
             }
         }

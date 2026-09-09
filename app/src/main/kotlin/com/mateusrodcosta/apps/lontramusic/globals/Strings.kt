@@ -16,7 +16,7 @@ interface StringSource {
         return strings
             .filterNotNull()
             .joinToString(
-                (if (GlobalData.initialized.get())
+                (if (GlobalData.initialized.isCompleted)
                     GlobalData.preferences.value.conjunctionSymbol.takeIf { it.isNotEmpty() }
                 else null) ?: get(R.string.symbol_conjunction)
             )

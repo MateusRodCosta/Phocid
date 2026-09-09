@@ -6,7 +6,7 @@ import com.mateusrodcosta.apps.lontramusic.data.PlayerTransientState
 import com.mateusrodcosta.apps.lontramusic.data.PlaylistManager
 import com.mateusrodcosta.apps.lontramusic.data.Preferences
 import com.mateusrodcosta.apps.lontramusic.data.UnfilteredTrackIndex
-import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
  * Initialized and saved by [com.mateusrodcosta.apps.lontramusic.MainApplication].
  */
 object GlobalData {
-    val initialized = AtomicBoolean(false)
+    val initialized = CompletableDeferred<Unit>()
 
     @Volatile lateinit var preferences: MutableStateFlow<Preferences>
     @Volatile lateinit var unfilteredTrackIndex: MutableStateFlow<UnfilteredTrackIndex>

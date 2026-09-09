@@ -44,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.glance.appwidget.updateAll
@@ -64,16 +65,14 @@ import com.mateusrodcosta.apps.lontramusic.ui.components.UtilitySwitchListItem
 import com.mateusrodcosta.apps.lontramusic.ui.theme.LontraMusicTheme
 import com.mateusrodcosta.apps.lontramusic.ui.theme.Typography
 import com.mateusrodcosta.apps.lontramusic.utils.roundToIntOrZero
-import java.util.Locale
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.runBlocking
-import androidx.compose.ui.platform.LocalLocale
 
 class WidgetConfigureActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
-        while (!GlobalData.initialized.get()) {
-            Thread.sleep(1)
+        runBlocking {
+            GlobalData.initialized.await()
         }
 
         enableEdgeToEdge(

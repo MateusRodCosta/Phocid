@@ -117,7 +117,7 @@ class MainApplication : Application(), SingletonImageLoader.Factory {
                     playerState.onEach { MainAppWidget().updateAll(context) }.collect()
                 }
 
-                initialized.set(true)
+                initialized.complete(Unit)
             }
         }
     }

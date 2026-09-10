@@ -1,0 +1,5 @@
+- Upgrade dependencies
+- Many under-the-hood improvements
+- Add notification permission
+- Improved library indexing
+- Fix broken widget
